@@ -49,10 +49,10 @@ ament_target_dependencies(reach_goal
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
 
-install(DIRECTORY
-  launch
-  DESTINATION share/${PROJECT_NAME}/
-)
+# install(DIRECTORY
+#   launch
+#   DESTINATION share/${PROJECT_NAME}/
+# )
 
 install(TARGETS
   go_to_goal
