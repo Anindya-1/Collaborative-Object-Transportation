@@ -35,6 +35,7 @@ class ReachGoal : public rclcpp::Node {
   double linear_x_gain_;
   double linear_y_gain_;
   double tolerance_;
+  double theta_desired;
 };
 
 }  // namespace omni_control_1

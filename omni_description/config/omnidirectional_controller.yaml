@@ -12,9 +12,12 @@ controller_manager:
 omnidirectional_controller:
   ros__parameters:
     wheel_names: 
-      - base_wheel_1_joint
-      - base_wheel_2_joint
-      - base_wheel_3_joint
+      # - base_wheel_1_joint
+      # - base_wheel_2_joint
+      # - base_wheel_3_joint
+      - wheel1_joint
+      - wheel2_joint
+      - wheel3_joint
 
 
     robot_radius: 0.2

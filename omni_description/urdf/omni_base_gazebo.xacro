@@ -24,7 +24,8 @@
     </gazebo>
 
     <xacro:macro name="ros2_control_wheel_joint" params="suffix">
-        <joint name="base_wheel_${suffix}_joint">
+        <!-- <joint name="base_wheel_${suffix}_joint"> -->
+        <joint name="wheel${suffix}_joint">
             <command_interface name="velocity">
                 <param name="initial_value">0</param>
                 <param name="min">-10</param>
