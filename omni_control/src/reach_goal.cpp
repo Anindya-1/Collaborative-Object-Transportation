@@ -76,10 +76,11 @@ void ReachGoal::readOdometryCallback(const nav_msgs::msg::Odometry::SharedPtr ms
     return;
   }
 
-  cmd_vel_.linear.x = linear_x_gain_*(goal_.getX() - robot_position.getX());
-  cmd_vel_.linear.y = linear_y_gain_*(goal_.getY() - robot_position.getY());
-  cmd_vel_.angular.z = angular_gain_*(atan2(goal_.getY() - robot_position.getY(),
-    goal_.getX() - robot_position.getX()) - tf2::getYaw(msg->pose.pose.orientation));
+  theta_desired = atan2(goal_.getY() - robot_position.getY(), goal_.getX() - robot_position.getX());
+
+  cmd_vel_.linear.x = linear_x_gain_*(distance_to_goal * cos(theta_desired));
+  cmd_vel_.linear.y = linear_y_gain_*(distance_to_goal * sin(theta_desired));
+  cmd_vel_.angular.z = angular_gain_*(theta_desired - tf2::getYaw(msg->pose.pose.orientation));
 
   cmd_vel_publisher_->publish(cmd_vel_);
 }

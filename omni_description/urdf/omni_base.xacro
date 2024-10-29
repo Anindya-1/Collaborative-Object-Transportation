@@ -5,11 +5,7 @@
     <xacro:property name="base_radius" value="0.18" />
     <xacro:property name="base_length" value="0.15" />
     <xacro:property name="wheel_radius" value="0.05" />
-<<<<<<< HEAD
     <xacro:property name="wheel_length" value="0.036" />
-=======
-    <xacro:property name="wheel_length" value="0.04" />
->>>>>>> origin/TUF
     
     <link name="base_footprint" />
 
@@ -27,11 +23,7 @@
             </geometry>
             <origin xyz="0 0 ${base_length / 2.0}" rpy="0 0 0" />
         </collision>
-<<<<<<< HEAD
         <xacro:cylinder_inertia m="2.0" r="${base_radius}" l ="${base_length}"
-=======
-        <xacro:cylinder_inertia m="5.0" r="${base_radius}" l ="${base_length}"
->>>>>>> origin/TUF
                            xyz="0 0 0" rpy="0 0 0" />
     </link>
 

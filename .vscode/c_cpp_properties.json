@@ -6,23 +6,15 @@
         "limitSymbolsToIncludedHeaders": false
       },
       "includePath": [
-        "/home/am/lidar_test_ws/install/pf_driver/include/**",
-        "/home/am/lidar_test_ws/install/pf_interfaces/include/**",
-        "/home/am/test_ws/install/test_modbus/include/**",
         "/home/am/test_ws/install/dynamixel_hardware/include/**",
         "/home/am/test_ws/install/dynamixel_workbench_toolbox/include/**",
         "/home/am/test_ws/install/dynamixel_workbench_msgs/include/**",
         "/home/am/test_ws/install/dynamixel_sdk_custom_interfaces/include/**",
         "/home/am/test_ws/install/dynamixel_sdk/include/**",
-        "/home/am/skel_ws/install/ros2_control_skel/include/**",
-        "/home/am/mira_ws/install/diffdrive_bot/include/**",
-        "/home/am/turtlebot3_ws/install/turtlebot3_gazebo/include/**",
-        "/home/am/turtlebot3_ws/install/turtlebot3_fake_node/include/**",
-        "/home/am/ros2_ws/install/my_robot_interfaces/include/**",
-        "/opt/ros/humble/include/**",
-        "/home/am/mtp_ws/src/MTP/omni_control/include/**",
-        "/home/am/mtp_ws/src/MTP/omnidirectional_controllers/include/**",
-        "/usr/include/**"
+        "/home/am/mtp_ws/install/omni_control/include/**",
+        "/home/am/mtp_ws/install/omnidirectional_controllers/include/**",
+        "${workspaceFolder}/**",
+        "/opt/ros/humble/include/**"
       ],
       "name": "ROS",
       "intelliSenseMode": "gcc-x64",
