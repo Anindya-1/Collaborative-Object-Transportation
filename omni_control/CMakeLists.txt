@@ -16,6 +16,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   tf2_msgs
   tf2_ros
   tf2_geometry_msgs
+  mm_interfaces
 )
 
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})

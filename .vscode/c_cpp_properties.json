@@ -14,7 +14,8 @@
         "/home/am/mtp_ws/install/omni_control/include/**",
         "/home/am/mtp_ws/install/omnidirectional_controllers/include/**",
         "${workspaceFolder}/**",
-        "/opt/ros/humble/include/**"
+        "/opt/ros/humble/include/**",
+        "~/mtp_ws/install/mm_interfaces/include/**"
       ],
       "name": "ROS",
       "intelliSenseMode": "gcc-x64",

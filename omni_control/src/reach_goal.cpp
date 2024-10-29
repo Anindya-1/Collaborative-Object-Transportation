@@ -16,16 +16,19 @@ using std::placeholders::_1;
 namespace omni_control_1 {
 
 ReachGoal::ReachGoal() : Node("reach_goal")
-  , no_goal_received_(false), angular_gain_(1.0), linear_x_gain_(1.0), linear_y_gain_(1.0), tolerance_(0.1) 
+  , no_goal_received_(false), angular_gain_(1.0), linear_x_gain_(1.0), linear_y_gain_(1.0), tolerance_(0.1), trajectory_point_count(0), cnt(0)
 {
   goal_.setZero();
+
+  trajectory_subscription_ = this->create_subscription<mm_interfaces::msg::Trajectory2D>(
+    "/trajectory", 1, std::bind(&ReachGoal::readTrajectoryCallback, this, _1));
 
   odom_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>(
     "/gazebo_ground_truth/odom", 1, std::bind(&ReachGoal::readOdometryCallback, this, _1));
 
-  goal_subscription_ = this->create_subscription<geometry_msgs::msg::Vector3>(
-    "~/goal", 1, std::bind(&ReachGoal::readGoalPointCallback, this, _1));
-
+  // goal_subscription_ = this->create_subscription<geometry_msgs::msg::Vector3>(
+  //   "~/goal", 1, std::bind(&ReachGoal::readGoalPointCallback, this, _1));
+  
   cmd_vel_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>(
     "/omnidirectional_controller/cmd_vel_unstamped", 10);
 
@@ -52,6 +55,21 @@ void ReachGoal::setGoalDistanceTolerance(double tolerance) {
   RCLCPP_INFO(this->get_logger(), "Distance to goal tolerance set to %.2f", this->tolerance_);
 }
  
+void ReachGoal::readTrajectoryCallback(const mm_interfaces::msg::Trajectory2D::SharedPtr msg){
+  tf2::Vector3 goal_position;
+  for(auto goal:msg->trajectory){
+    goal_position.setX(goal.x);
+    goal_position.setY(goal.y);
+    goal_position.setZ(goal.z);
+    trajectory.push_back(goal_position);
+    trajectory_point_count++;
+  }
+  RCLCPP_INFO(this->get_logger(), "Trajectory has %d points", trajectory_point_count);
+  if(trajectory_point_count > 0){
+    no_goal_received_ = true;
+  }
+}
+
 void ReachGoal::readOdometryCallback(const nav_msgs::msg::Odometry::SharedPtr msg) {
   cmd_vel_.linear.x = 0;
   cmd_vel_.linear.y = 0;
@@ -72,8 +90,17 @@ void ReachGoal::readOdometryCallback(const nav_msgs::msg::Odometry::SharedPtr ms
   double distance_to_goal = this->goal_.distance(robot_position);
 
   if (distance_to_goal < tolerance_) {
-    cmd_vel_publisher_->publish(cmd_vel_);
-    RCLCPP_INFO(this->get_logger(), "goal reached");
+    if(cnt == trajectory_point_count){
+      RCLCPP_INFO(this->get_logger(), "Omni has reached its final position");
+      no_goal_received_ = false;
+      cmd_vel_publisher_->publish(cmd_vel_);
+    }
+    else{
+      goal_ = trajectory.at(cnt);
+      RCLCPP_INFO(this->get_logger(), "Receiveid goal point: (%.2f, %.2f)",
+        goal_.getX(), goal_.getY());
+      cnt++;
+    }
     return;
   }
 

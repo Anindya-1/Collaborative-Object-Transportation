@@ -21,3 +21,8 @@ int main(int argc, char * argv[]) {
   rclcpp::shutdown();
   return 0;
 }
+
+// ros2 topic pub /trajectory mm_interfaces/msg/Trajectory2D "trajectory:
+// - {x: 0.0, y: 0.0, z: 0.0}
+// - {x: 0.5, y: 0.5, z: 0.0}
+// - {x: 1.0, y: 1.0, z: 0.0}"
