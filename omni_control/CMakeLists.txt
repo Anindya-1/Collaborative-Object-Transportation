@@ -27,7 +27,17 @@ add_executable(go_to_goal
   src/go_to_goal.cpp
 )
 
+add_executable(reach_goal
+  src/reach_goal_node.cpp
+  src/reach_goal.cpp
+)
+
 target_include_directories(go_to_goal
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
+target_include_directories(reach_goal
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
@@ -35,14 +45,18 @@ target_include_directories(go_to_goal
 ament_target_dependencies(go_to_goal
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
-
-install(DIRECTORY
-  launch
-  DESTINATION share/${PROJECT_NAME}/
+ament_target_dependencies(reach_goal
+  ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
+
+# install(DIRECTORY
+#   launch
+#   DESTINATION share/${PROJECT_NAME}/
+# )
 
 install(TARGETS
   go_to_goal
+  reach_goal
   DESTINATION lib/${PROJECT_NAME}
 )
 
