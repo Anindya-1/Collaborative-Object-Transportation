@@ -3,9 +3,13 @@
 <robot name="omni" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
     <xacro:include filename="common_properties.xacro" />
+<<<<<<< HEAD
     <!-- <xacro:include filename="omni_base.xacro" /> -->
 
     <xacro:include filename="omni_base_wheels.xacro" />
+=======
+    <xacro:include filename="omni_base.xacro" />
+>>>>>>> origin/TUF
 
     <xacro:include filename="omni_base_gazebo.xacro" />
 

@@ -27,11 +27,20 @@ add_executable(go_to_goal
   src/go_to_goal.cpp
 )
 
+<<<<<<< HEAD
+=======
+add_executable(reach_goal
+  src/reach_goal_node.cpp
+  src/reach_goal.cpp
+)
+
+>>>>>>> origin/TUF
 target_include_directories(go_to_goal
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
 
+<<<<<<< HEAD
 ament_target_dependencies(go_to_goal
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
@@ -39,6 +48,28 @@ ament_target_dependencies(go_to_goal
 
 install(TARGETS
   go_to_goal
+=======
+target_include_directories(reach_goal
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
+ament_target_dependencies(go_to_goal
+  ${THIS_PACKAGE_INCLUDE_DEPENDS}
+)
+ament_target_dependencies(reach_goal
+  ${THIS_PACKAGE_INCLUDE_DEPENDS}
+)
+
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}/
+)
+
+install(TARGETS
+  go_to_goal
+  reach_goal
+>>>>>>> origin/TUF
   DESTINATION lib/${PROJECT_NAME}
 )
 
