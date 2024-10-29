@@ -73,6 +73,7 @@ void ReachGoal::readOdometryCallback(const nav_msgs::msg::Odometry::SharedPtr ms
 
   if (distance_to_goal < tolerance_) {
     cmd_vel_publisher_->publish(cmd_vel_);
+    RCLCPP_INFO(this->get_logger(), "goal reached");
     return;
   }
 
