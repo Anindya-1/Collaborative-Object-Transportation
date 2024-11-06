@@ -18,8 +18,7 @@ namespace omni_control_1 {
 ReachGoal::ReachGoal() : Node("reach_goal")
   , no_goal_received_(false), angular_gain_(1.0), linear_x_gain_(1.0), linear_y_gain_(1.0), tolerance_(0.1), trajectory_point_count(0), cnt(0)
 {
-  goal_.position.setZero();
-  goal_.yaw = 0.0;
+  goal_.setZero();
 
   trajectory_subscription_ = this->create_subscription<mm_interfaces::msg::Trajectory2D>(
     "/trajectory", 1, std::bind(&ReachGoal::readTrajectoryCallback, this, _1));
@@ -57,14 +56,12 @@ void ReachGoal::setGoalDistanceTolerance(double tolerance) {
 }
  
 void ReachGoal::readTrajectoryCallback(const mm_interfaces::msg::Trajectory2D::SharedPtr msg){
+  tf2::Vector3 goal_position;
   for(auto goal:msg->trajectory){
-    TrajectoryPoint trajectory_point;
-    trajectory_point.position.setX(goal.waypoint.x);
-    trajectory_point.position.setY(goal.waypoint.y);
-    trajectory_point.position.setZ(goal.waypoint.z);
-    trajectory_point.yaw = goal.yaw;
-
-    trajectory.push_back(trajectory_point);
+    goal_position.setX(goal.x);
+    goal_position.setY(goal.y);
+    goal_position.setZ(goal.z);
+    trajectory.push_back(goal_position);
     trajectory_point_count++;
   }
   RCLCPP_INFO(this->get_logger(), "Trajectory has %d points", trajectory_point_count);
@@ -86,13 +83,11 @@ void ReachGoal::readOdometryCallback(const nav_msgs::msg::Odometry::SharedPtr ms
   RCLCPP_INFO(this->get_logger(), "x: %.2f, y: %.2f, theta: %.2f",msg->pose.pose.position.x, msg->pose.pose.position.y, (msg->pose.pose.orientation.z * 57.295));  
 
   tf2::Vector3 robot_position;
-  double robot_yaw;
   robot_position.setX(msg->pose.pose.position.x);
   robot_position.setY(msg->pose.pose.position.y);
   robot_position.setZ(0);
-  robot_yaw = msg->pose.pose.orientation.z;
 
-  double distance_to_goal = this->goal_.position.distance(robot_position);
+  double distance_to_goal = this->goal_.distance(robot_position);
 
   if (distance_to_goal < tolerance_) {
     if(cnt == trajectory_point_count){
@@ -102,31 +97,29 @@ void ReachGoal::readOdometryCallback(const nav_msgs::msg::Odometry::SharedPtr ms
     }
     else{
       goal_ = trajectory.at(cnt);
-      RCLCPP_INFO(this->get_logger(), "Receiveid goal point: (%.2f, %.2f), yaw: %.2f",
-        goal_.position.getX(), goal_.position.getY(), goal_.yaw);
+      RCLCPP_INFO(this->get_logger(), "Receiveid goal point: (%.2f, %.2f)",
+        goal_.getX(), goal_.getY());
       cnt++;
     }
     return;
   }
 
-  theta_desired = atan2(goal_.position.getY() - robot_position.getY(), goal_.position.getX() - robot_position.getX());
-
-  double yaw_error = goal_.yaw - robot_yaw;
+  theta_desired = atan2(goal_.getY() - robot_position.getY(), goal_.getX() - robot_position.getX());
 
   cmd_vel_.linear.x = linear_x_gain_*(distance_to_goal * cos(theta_desired));
   cmd_vel_.linear.y = linear_y_gain_*(distance_to_goal * sin(theta_desired));
-  cmd_vel_.angular.z = angular_gain_* (yaw_error + (theta_desired - tf2::getYaw(msg->pose.pose.orientation)));
+  cmd_vel_.angular.z = angular_gain_*(theta_desired - tf2::getYaw(msg->pose.pose.orientation));
 
   cmd_vel_publisher_->publish(cmd_vel_);
 }
 
 void ReachGoal::readGoalPointCallback(const geometry_msgs::msg::Vector3::SharedPtr goal) {
-  this->goal_.position.setX(goal->x);
-  this->goal_.position.setY(goal->y);
-  this->goal_.position.setZ(0);
+  this->goal_.setX(goal->x);
+  this->goal_.setY(goal->y);
+  this->goal_.setZ(0);
   no_goal_received_ = true;
   RCLCPP_INFO(this->get_logger(), "Receiveid goal point: (%.2f, %.2f)",
-    goal_.position.getX(), goal_.position.getY());
+    goal_.getX(), goal_.getY());
 }
 
 ReachGoal::~ReachGoal() {}

@@ -12,8 +12,10 @@ find_package(geometry_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Trajectory2D.msg"
+  "msg/Waypoint.msg"
   DEPENDENCIES geometry_msgs
 )
+
 
 ament_export_dependencies(rosidl_default_runtime)
 

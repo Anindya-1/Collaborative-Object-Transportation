@@ -1,1 +1,1 @@
-geometry_msgs/Vector3[] trajectory
+mm_interfaces/Waypoint[] trajectory

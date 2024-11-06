@@ -21,6 +21,12 @@ class ReachGoal : public rclcpp::Node {
   void setLinearYGain(double gain);
   void setGoalDistanceTolerance(double tolerance);
 
+  struct TrajectoryPoint {
+    tf2::Vector3 position;
+    double yaw;
+  };
+
+
  protected:
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_subscription_;
   rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr goal_subscription_;
@@ -32,9 +38,9 @@ class ReachGoal : public rclcpp::Node {
   void readOdometryCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
   void readGoalPointCallback(const geometry_msgs::msg::Vector3::SharedPtr goal);  
 
-  std::vector<tf2::Vector3> trajectory;
+  std::vector<TrajectoryPoint> trajectory;
   geometry_msgs::msg::Twist cmd_vel_;
-  tf2::Vector3 goal_;
+  TrajectoryPoint goal_;
   bool no_goal_received_;
   double angular_gain_;
   double linear_x_gain_;
