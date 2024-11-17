@@ -22,11 +22,11 @@ int main(int argc, char * argv[]) {
   return 0;
 }
 
-ros2 topic pub /trajectory mm_interfaces/msg/Trajectory2D "trajectory:
-- {waypoint:{x: 0.0, y: 0.0, z: 0.0}, yaw: 0.0}
-- {waypoint:{x: 0.25, y: 0.25, z: 0.0}, yaw: 0.784}
-- {waypoint:{x: 0.5, y: 0.5, z: 0.0}, yaw: 0.784}
-- {waypoint:{x: 0.75, y: 0.75, z: 0.0}, yaw: 0.784}
-- {waypoint:{x: 1.0, y: 1.0, z: 0.0}, yaw: 0.784}
-- {waypoint:{x: 1.25, y: 1.25, z: 0.0}, yaw: 0.784}
-- {waypoint:{x: 1.5, y: 1.5, z: 0.0}, yaw: 0.784}"
+// ros2 topic pub /trajectory mm_interfaces/msg/Trajectory2D "trajectory:
+// - {waypoint:{x: 0.0, y: 0.0, z: 0.0}, yaw: 0.0}
+// - {waypoint:{x: 0.25, y: 0.25, z: 0.0}, yaw: 0.784}
+// - {waypoint:{x: 0.5, y: 0.5, z: 0.0}, yaw: 0.784}
+// - {waypoint:{x: 0.75, y: 0.75, z: 0.0}, yaw: 0.784}
+// - {waypoint:{x: 1.0, y: 1.0, z: 0.0}, yaw: 0.784}
+// - {waypoint:{x: 1.25, y: 1.25, z: 0.0}, yaw: 0.784}
+// - {waypoint:{x: 1.5, y: 1.5, z: 0.0}, yaw: 0.784}"

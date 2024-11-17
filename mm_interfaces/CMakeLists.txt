@@ -13,6 +13,7 @@ find_package(geometry_msgs REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Trajectory2D.msg"
   "msg/Waypoint.msg"
+  "msg/TrajectoryDiff.msg"
   DEPENDENCIES geometry_msgs
 )
 

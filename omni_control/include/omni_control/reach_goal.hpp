@@ -40,7 +40,7 @@ class ReachGoal : public rclcpp::Node {
 
   std::vector<TrajectoryPoint> trajectory;
   geometry_msgs::msg::Twist cmd_vel_;
-  TrajectoryPoint goal_;
+  TrajectoryPoint  goal_;
   bool no_goal_received_;
   double angular_gain_;
   double linear_x_gain_;

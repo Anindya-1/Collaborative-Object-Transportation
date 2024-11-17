@@ -6,13 +6,14 @@
         "limitSymbolsToIncludedHeaders": false
       },
       "includePath": [
-        "/home/am/test_ws/install/dynamixel_hardware/include/**",
-        "/home/am/test_ws/install/dynamixel_workbench_toolbox/include/**",
-        "/home/am/test_ws/install/dynamixel_workbench_msgs/include/**",
-        "/home/am/test_ws/install/dynamixel_sdk_custom_interfaces/include/**",
-        "/home/am/test_ws/install/dynamixel_sdk/include/**",
-        "/home/am/mtp_ws/install/omni_control/include/**",
-        "/home/am/mtp_ws/install/omnidirectional_controllers/include/**",
+        "/home/csl-a/test_ws/install/dynamixel_hardware/include/**",
+        "/home/csl-a/test_ws/install/dynamixel_workbench_toolbox/include/**",
+        "/home/csl-a/test_ws/install/dynamixel_workbench_msgs/include/**",
+        "/home/csl-a/test_ws/install/dynamixel_sdk_custom_interfaces/include/**",
+        "/home/csl-a/test_ws/install/dynamixel_sdk/include/**",
+        "/home/csl-a/mtp_ws/install/omni_control/include/**",
+        "/home/csl-a/mtp_ws/install/prop_nav/include/**",
+        "/home/csl-a/mtp_ws/install/omnidirectional_controllers/include/**",
         "${workspaceFolder}/**",
         "/opt/ros/humble/include/**",
         "~/mtp_ws/install/mm_interfaces/include/**"

@@ -23,7 +23,7 @@
             </geometry>
             <origin xyz="0 0 ${base_length / 2.0}" rpy="0 0 0" />
         </collision>
-        <xacro:cylinder_inertia m="2.0" r="${base_radius}" l ="${base_length}"
+        <xacro:cylinder_inertia m="10.0" r="${base_radius}" l ="${base_length}"
                            xyz="0 0 0" rpy="0 0 0" />
     </link>
 
@@ -48,11 +48,7 @@
                 </geometry>
                 <origin xyz="0 0 ${-1*wheel_length / 2.0}" rpy="0 0 0" />
             </collision>
-<<<<<<< HEAD
             <xacro:cylinder_inertia m="0.33" r="${wheel_radius}" l="${wheel_length}" 
-=======
-            <xacro:cylinder_inertia m="1.0" r="${wheel_radius}" l="${wheel_length}" 
->>>>>>> origin/TUF
                                     xyz="0 0 0" rpy="${pi / 2.0} 0 0" />
         </link>
     </xacro:macro>
