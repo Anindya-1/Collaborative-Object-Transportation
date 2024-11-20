@@ -35,5 +35,10 @@
         "/opt/ros/humble/lib/python3.10/site-packages",
         "/opt/ros/humble/local/lib/python3.10/dist-packages"
     ],
-    "cmake.sourceDirectory": "/home/csl-a/mtp_ws/src/omni_bringup"
+    "cmake.sourceDirectory": "/home/csl-a/mtp_ws/src/omni_bringup",
+    "files.associations": {
+        "deque": "cpp",
+        "string": "cpp",
+        "vector": "cpp"
+    }
 }

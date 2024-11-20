@@ -13,6 +13,8 @@
         "/home/csl-a/test_ws/install/dynamixel_sdk/include/**",
         "/home/csl-a/mtp_ws/install/omni_control/include/**",
         "/home/csl-a/mtp_ws/install/prop_nav/include/**",
+        "/home/csl-a/mtp_ws/install/prm_planner/include/**",
+        "/home/csl-a/mtp_ws/install/prm_graph_publisher/include/**",
         "/home/csl-a/mtp_ws/install/omnidirectional_controllers/include/**",
         "${workspaceFolder}/**",
         "/opt/ros/humble/include/**",

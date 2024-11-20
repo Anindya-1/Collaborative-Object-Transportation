@@ -11,6 +11,8 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(geometry_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/Pair.msg"
+  "msg/UndirectedGraph.msg"
   "msg/Trajectory2D.msg"
   "msg/Waypoint.msg"
   "msg/TrajectoryDiff.msg"

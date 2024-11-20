@@ -141,7 +141,7 @@ void PropNavGuide::readOdometryCallback(const nav_msgs::msg::Odometry::SharedPtr
 
     double ang_vel(0.0);
     if(nav_const_* theta_LOS_rate > 0.5){
-        ang_vel = 0.5;
+        ang_vel = 0.25;
     }
     else{
         ang_vel = nav_const_* theta_LOS_rate;
