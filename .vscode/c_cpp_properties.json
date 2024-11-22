@@ -1,31 +1,27 @@
 {
-  "configurations": [
-    {
-      "browse": {
-        "databaseFilename": "${default}",
-        "limitSymbolsToIncludedHeaders": false
-      },
-      "includePath": [
-        "/home/csl-a/test_ws/install/dynamixel_hardware/include/**",
-        "/home/csl-a/test_ws/install/dynamixel_workbench_toolbox/include/**",
-        "/home/csl-a/test_ws/install/dynamixel_workbench_msgs/include/**",
-        "/home/csl-a/test_ws/install/dynamixel_sdk_custom_interfaces/include/**",
-        "/home/csl-a/test_ws/install/dynamixel_sdk/include/**",
-        "/home/csl-a/mtp_ws/install/omni_control/include/**",
-        "/home/csl-a/mtp_ws/install/prop_nav/include/**",
-        "/home/csl-a/mtp_ws/install/prm_planner/include/**",
-        "/home/csl-a/mtp_ws/install/prm_graph_publisher/include/**",
-        "/home/csl-a/mtp_ws/install/omnidirectional_controllers/include/**",
-        "${workspaceFolder}/**",
-        "/opt/ros/humble/include/**",
-        "~/mtp_ws/install/mm_interfaces/include/**"
-      ],
-      "name": "ROS",
-      "intelliSenseMode": "gcc-x64",
-      "compilerPath": "/usr/bin/gcc",
-      "cStandard": "gnu11",
-      "cppStandard": "c++14"
-    }
-  ],
-  "version": 4
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "/home/csl-a/test_ws/install/dynamixel_hardware/include/**",
+                "/home/csl-a/test_ws/install/dynamixel_workbench_toolbox/include/**",
+                "/home/csl-a/test_ws/install/dynamixel_workbench_msgs/include/**",
+                "/home/csl-a/test_ws/install/dynamixel_sdk_custom_interfaces/include/**",
+                "/home/csl-a/test_ws/install/dynamixel_sdk/include/**",
+                "/home/csl-a/mtp_ws/install/omni_control/include/**",
+                "/home/csl-a/mtp_ws/install/prop_nav/include/**",
+                "/home/csl-a/mtp_ws/install/prm_planner/include/**",
+                "/home/csl-a/mtp_ws/install/dijkstra/include/**",
+                "/home/csl-a/mtp_ws/install/omnidirectional_controllers/include/**",
+                "${workspaceFolder}/**",
+                "/opt/ros/humble/include/**",
+                "~/mtp_ws/install/mm_interfaces/include/**"
+            ],
+            "defines": [],
+            "cStandard": "c17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
 }

@@ -103,7 +103,7 @@ private:
 
     bool isPointInObstacle(const Point2D &p) {
         for (const auto &obs : obstacles_) {
-            if (euclideanDistance(p, obs) < 0.1) { // Obstacle radius = 0.1
+            if (euclideanDistance(p, obs) < obs_rad) { // Obstacle radius = 0.1
                 return true;
             }
         }
