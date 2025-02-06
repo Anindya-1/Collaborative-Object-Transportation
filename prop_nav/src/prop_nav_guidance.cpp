@@ -17,8 +17,12 @@ namespace prop_nav {
 
 PropNavGuide::PropNavGuide() : Node("prop_nav_guidance")
     , no_goal_received_(false), nav_const_(1.0), tolerance_(1.0), trajectory_point_count(0), count(0), 
-    previous_theta_LOS(0.0), delta_t(0.02), theta_LOS_rate(0.0), config(3), lin_speed(0.1)
+    previous_theta_LOS(0.0), delta_t(0.02), theta_LOS_rate(0.0), lin_speed(0.1)
 {
+    this->declare_parameter("config", 2);
+
+    config = this->get_parameter("config").as_int();
+
     goal_.setZero();
 
     trajectory_subscription_ = this->create_subscription<mm_interfaces::msg::TrajectoryDiff>(
@@ -140,12 +144,13 @@ void PropNavGuide::readOdometryCallback(const nav_msgs::msg::Odometry::SharedPtr
     // cmd_vel_.angular.z = nav_const_* (yaw_error + (theta_desired - robot_yaw));
 
     double ang_vel(0.0);
-    if(nav_const_* theta_LOS_rate > 0.5){
-        ang_vel = 0.25;
-    }
-    else{
-        ang_vel = nav_const_* theta_LOS_rate;
-    }
+    // if(nav_const_* theta_LOS_rate > 0.5){
+    //     ang_vel = 0.25;
+    // }
+    // else{
+    //     ang_vel = nav_const_* theta_LOS_rate;
+    // }
+    ang_vel = nav_const_* theta_LOS_rate;
 
     if (config == 2){
         cmd_vel_.linear.x = lin_speed;

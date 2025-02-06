@@ -3,11 +3,6 @@
         {
             "name": "Linux",
             "includePath": [
-                "/home/csl-a/test_ws/install/dynamixel_hardware/include/**",
-                "/home/csl-a/test_ws/install/dynamixel_workbench_toolbox/include/**",
-                "/home/csl-a/test_ws/install/dynamixel_workbench_msgs/include/**",
-                "/home/csl-a/test_ws/install/dynamixel_sdk_custom_interfaces/include/**",
-                "/home/csl-a/test_ws/install/dynamixel_sdk/include/**",
                 "/home/csl-a/mtp_ws/install/omni_control/include/**",
                 "/home/csl-a/mtp_ws/install/prop_nav/include/**",
                 "/home/csl-a/mtp_ws/install/prm_planner/include/**",

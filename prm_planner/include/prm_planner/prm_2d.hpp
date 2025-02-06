@@ -13,13 +13,12 @@
 #include <cmath>
 
 // Struct for a 3D point
-struct Point3D {
-    double x, y, z;
+struct Point2D {
+    double x, y;
 };
 
 // Function to calculate Euclidean distance
-double euclideanDistance(const Point3D &a, const Point3D &b);
-// double euclideanDistance(const geometry_msgs::msg::Point &a, const geometry_msgs::msg::Point &b);
+double euclideanDistance(const geometry_msgs::msg::Point &a, const geometry_msgs::msg::Point &b);
 
 class PRMPlanner : public rclcpp::Node {
 public:
@@ -30,12 +29,11 @@ private:
     void generateRandomSamples();
     void constructRoadmap();
     void publishRoadmap();
+    void publishObstacles();
     void publishGraph();
 
-    bool isPointInObstacle(const Point3D &p);
-    bool isEdgeInObstacle(const Point3D &a, const Point3D &b);
-    // bool isPointInObstacle(const geometry_msgs::msg::Point &p);
-    // bool isEdgeInObstacle(const geometry_msgs::msg::Point &a, const geometry_msgs::msg::Point &b);
+    bool isPointInObstacle(const geometry_msgs::msg::Point &p);
+    bool isEdgeInObstacle(const geometry_msgs::msg::Point &a, const geometry_msgs::msg::Point &b);
 
     // PRM parameters
     int num_samples_;
@@ -43,11 +41,9 @@ private:
     double map_size_;
     double obs_rad;
     int max_connection_per_node;
-    std::vector<Point3D> samples_;
-    // std::vector<geometry_msgs::msg::Point> samples_;
+    std::vector<geometry_msgs::msg::Point> samples_;
     std::vector<std::pair<size_t, size_t>> edges_;
-    std::vector<Point3D> obstacles_;
-    // std::vector<geometry_msgs::msg::Point> obstacles_;
+    std::vector<Point2D> obstacles_;
     std::vector<int> parent_;  // Disjoint-set to prevent cycles
 
     // Random number generation

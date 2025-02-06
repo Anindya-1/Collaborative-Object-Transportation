@@ -20,12 +20,13 @@ class PRMNode : public rclcpp::Node {
 public:
     PRMNode() : Node("prm_node"), rng_(std::random_device{}()), dist_(0.0, 1.0) {
         // Initialize the PRM parameters
-        num_samples_ = 500;       // Number of random samples
-        connection_radius_ = 0.5; // Max distance for connecting nodes
+        num_samples_ = 5000;       // Number of random samples
+        connection_radius_ = 0.25; // Max distance for connecting nodes
         map_size_ = 5.0;          // Map is in [0, map_size_] x [0, map_size_]
 
         // Example obstacles (in normalized coordinates)
         obstacles_ = { {0.5, 0.5}, {0.3, 0.7} };
+        
 
         // Publishers for visualizing PRM
         roadmap_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("prm_roadmap", 10);

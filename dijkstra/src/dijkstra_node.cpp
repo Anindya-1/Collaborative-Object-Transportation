@@ -1,12 +1,11 @@
 #include "dijkstra/dijkstra_node.hpp"
 
-double euclideanDistance(const geometry_msgs::msg::Point &a, const geometry_msgs::msg::Point &b){
+double euclideanDistance(const geometry_msgs::msg::Point &a, const geometry_msgs::msg::Point &b) {
     return std::sqrt(std::pow(a.x - b.x, 2) + std::pow(a.y - b.y, 2) + std::pow(a.z - b.z, 2));
 }
 
 DijkstraNode::DijkstraNode() : Node("dijkstra_node"), 
-    graph_received_{false}
-{
+    graph_received_{false} {
     this->declare_parameter<std::vector<double>>("source", {0.0, 0.0, 0.0});
     this->declare_parameter<std::vector<double>>("target", {1.0, 1.0, 0.0});
 
@@ -16,12 +15,13 @@ DijkstraNode::DijkstraNode() : Node("dijkstra_node"),
     graph_subscription_ = this->create_subscription<mm_interfaces::msg::UndirectedGraph>(
         "graph", 10, std::bind(&DijkstraNode::graphCallback, this, std::placeholders::_1));
     trajectory_publisher_ = this->create_publisher<mm_interfaces::msg::TrajectoryDiff>("trajectory", 10);
+    marker_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("trajectory_marker", 10);
 
     RCLCPP_INFO(this->get_logger(), "DijkstraNode initialized.");
 }
 
 void DijkstraNode::graphCallback(const mm_interfaces::msg::UndirectedGraph::SharedPtr msg) {
-    if(graph_received_ == false){
+    if (!graph_received_) {
         RCLCPP_INFO(this->get_logger(), "Received graph data.");
         graph_received_ = true;
 
@@ -42,18 +42,50 @@ void DijkstraNode::graphCallback(const mm_interfaces::msg::UndirectedGraph::Shar
             }
         }
 
-        // int source = 5;  // Define source node index
-        // int target = 60;  // Define target node index
         source = nearestNode(msg, source_position);
         target = nearestNode(msg, target_position);
 
         auto path_indices = computeDijkstra(source, target, adj_matrix);
         trajectory = extractTrajectory(path_indices, msg->nodes);
+
+        
     }
+    
 
     mm_interfaces::msg::TrajectoryDiff trajectory_msg;
     trajectory_msg.trajectory = trajectory;
     trajectory_publisher_->publish(trajectory_msg);
+
+    // Publish the trajectory as a marker
+    publishMarker(trajectory);
+}
+
+void DijkstraNode::publishMarker(const std::vector<geometry_msgs::msg::Vector3> &trajectory) {
+    visualization_msgs::msg::Marker marker;
+    marker.header.frame_id = "map"; // Change this to your desired frame
+    marker.header.stamp = this->now();
+    marker.ns = "trajectory";
+    marker.id = 0;
+    marker.type = visualization_msgs::msg::Marker::LINE_STRIP;
+    marker.action = visualization_msgs::msg::Marker::ADD;
+
+    // Set marker color
+    marker.scale.x = 0.1; // Line width
+    marker.color.r = 1.0;
+    marker.color.g = 0.0;
+    marker.color.b = 0.0;
+    marker.color.a = 1.0;
+
+    // Add points to the marker
+    for (const auto &point : trajectory) {
+        geometry_msgs::msg::Point p;
+        p.x = point.x;
+        p.y = point.y;
+        p.z = point.z;
+        marker.points.push_back(p);
+    }
+
+    marker_publisher_->publish(marker);
 }
 
 std::vector<int> DijkstraNode::computeDijkstra(int source, int target, const std::vector<std::vector<float>> &adj_matrix) {

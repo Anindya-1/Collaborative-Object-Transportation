@@ -1,4 +1,4 @@
-#include "prm_planner/prm.hpp"
+#include "prm_planner/prm_3d.hpp"
 
 // Helper function to calculate Euclidean distance
 double euclideanDistance(const Point3D &a, const Point3D &b) {

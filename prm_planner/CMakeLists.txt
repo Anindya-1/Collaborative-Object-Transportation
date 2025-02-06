@@ -13,7 +13,7 @@ find_package(visualization_msgs REQUIRED)
 find_package(mm_interfaces REQUIRED)
 
 add_executable(prm_planner 
-  src/prm.cpp
+  src/prm_2d.cpp
 )
 
 target_include_directories(prm_planner
