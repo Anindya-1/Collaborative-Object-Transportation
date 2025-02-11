@@ -7,17 +7,18 @@ double euclideanDistance(const geometry_msgs::msg::Point &a, const geometry_msgs
 }
 
 // Constructor for the PRMPlanner
-PRMPlanner::PRMPlanner() : Node("prm_planner"), rng_(std::random_device{}()), dist_(0.0, 1.0) {
+PRMPlanner::PRMPlanner() : Node("prm_planner"), rng_(std::random_device{}()), dist_(0.0, 1.0), pub_flag(false) {
     this->declare_parameter("sample_size", 3000);
     this->declare_parameter("map_size", 5.0);
     this->declare_parameter("obs_rad", 0.2);
     this->declare_parameter("connection_radius", 0.25);
+    this->declare_parameter("max_connection_count", 30);
     
     // Initialize the PRM parameters
     num_samples_ = this->get_parameter("sample_size").as_int();       // Number of random samples
     connection_radius_ = this->get_parameter("connection_radius").as_double();  // Max distance for connecting nodes
     map_size_ = this->get_parameter("map_size").as_double();          // Map is in [0, map_size_] x [0, map_size_]
-    max_connection_per_node = 30;
+    max_connection_per_node = this->get_parameter("max_connection_count").as_int();;
     obs_rad = this->get_parameter("obs_rad").as_double();
 
     // Example obstacles (in normalized coordinates)
@@ -134,6 +135,11 @@ void PRMPlanner::publishGraph() {
     R.edges = e;
 
     graph_pub_->publish(R);
+
+    if(pub_flag==false){
+        RCLCPP_INFO(this->get_logger(), "Graph published");
+        pub_flag = true;
+    }
 }
 
 void PRMPlanner::publishObstacles() {

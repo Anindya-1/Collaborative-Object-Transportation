@@ -16,11 +16,19 @@ DijkstraNode::DijkstraNode() : Node("dijkstra_node"),
         "graph", 10, std::bind(&DijkstraNode::graphCallback, this, std::placeholders::_1));
     trajectory_publisher_ = this->create_publisher<mm_interfaces::msg::TrajectoryDiff>("trajectory", 10);
     marker_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("trajectory_marker", 10);
+    terminal_pt_publisher_ = this->create_publisher<mm_interfaces::msg::TerminalPoints>("terminal_points", 10);
 
     RCLCPP_INFO(this->get_logger(), "DijkstraNode initialized.");
 }
 
 void DijkstraNode::graphCallback(const mm_interfaces::msg::UndirectedGraph::SharedPtr msg) {
+
+    mm_interfaces::msg::TerminalPoints term_pt_msg;
+    term_pt_msg.source = source_position;
+    term_pt_msg.target = target_position;
+
+    terminal_pt_publisher_->publish(term_pt_msg);
+
     if (!graph_received_) {
         RCLCPP_INFO(this->get_logger(), "Received graph data.");
         graph_received_ = true;

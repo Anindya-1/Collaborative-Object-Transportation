@@ -35,6 +35,8 @@ private:
     bool isPointInObstacle(const geometry_msgs::msg::Point &p);
     bool isEdgeInObstacle(const geometry_msgs::msg::Point &a, const geometry_msgs::msg::Point &b);
 
+    bool pub_flag;
+
     // PRM parameters
     int num_samples_;
     double connection_radius_;

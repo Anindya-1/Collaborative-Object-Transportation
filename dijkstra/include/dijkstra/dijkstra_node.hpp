@@ -7,6 +7,7 @@
 #include <visualization_msgs/msg/marker.hpp>
 #include "mm_interfaces/msg/trajectory_diff.hpp"
 #include "mm_interfaces/msg/undirected_graph.hpp"
+#include "mm_interfaces/msg/terminal_points.hpp"
 #include <vector>
 #include <limits>
 #include <queue>
@@ -26,6 +27,7 @@ private:
     rclcpp::Subscription<mm_interfaces::msg::UndirectedGraph>::SharedPtr graph_subscription_;
     rclcpp::Publisher<mm_interfaces::msg::TrajectoryDiff>::SharedPtr trajectory_publisher_;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_publisher_;
+    rclcpp::Publisher<mm_interfaces::msg::TerminalPoints>::SharedPtr terminal_pt_publisher_;
 
     bool graph_received_;
     std::vector<geometry_msgs::msg::Vector3> trajectory;
