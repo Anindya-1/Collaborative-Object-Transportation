@@ -10,7 +10,8 @@
                 "/home/csl-a/mtp_ws/install/omnidirectional_controllers/include/**",
                 "${workspaceFolder}/**",
                 "/opt/ros/humble/include/**",
-                "~/mtp_ws/install/mm_interfaces/include/**"
+                "~/mtp_ws/install/mm_interfaces/include/**",
+                "~/mtp_ws/install/path_planner/include/**"
             ],
             "defines": [],
             "cStandard": "c17",

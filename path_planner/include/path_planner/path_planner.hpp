@@ -1,17 +1,21 @@
-#ifndef PRM_PLANNER_HPP
-#define PRM_PLANNER_HPP
+#ifndef PATH_PLANNER_HPP
+#define PATH_PLANNER_HPP
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/pose_array.hpp"
 #include "geometry_msgs/msg/pose.hpp"
 #include "geometry_msgs/msg/point.hpp"
+#include <geometry_msgs/msg/vector3.hpp>
 #include "visualization_msgs/msg/marker.hpp"
 #include "mm_interfaces/msg/undirected_graph.hpp"
 #include "mm_interfaces/msg/pair.hpp"
 #include "mm_interfaces/msg/terminal_points.hpp"
+#include "mm_interfaces/msg/trajectory_diff.hpp"
 #include <vector>
 #include <random>
 #include <cmath>
+#include <limits>
+#include <queue>
 
 // Struct for a 3D point
 struct Point2D {
@@ -21,9 +25,9 @@ struct Point2D {
 // Function to calculate Euclidean distance
 double euclideanDistance(const geometry_msgs::msg::Point &a, const geometry_msgs::msg::Point &b);
 
-class PRMPlanner : public rclcpp::Node {
+class PathPlanner : public rclcpp::Node {
 public:
-    PRMPlanner();
+    PathPlanner();
 
 private:
     void runPRM();
@@ -49,6 +53,12 @@ private:
     std::vector<Point2D> obstacles_;
     std::vector<int> parent_;  // Disjoint-set to prevent cycles
 
+    // Dijkstra functions
+    void Dijkstra(const mm_interfaces::msg::UndirectedGraph::SharedPtr msg);
+    std::vector<int> computeDijkstra(int source, int target, const std::vector<std::vector<float>> &adj_matrix);
+    std::vector<geometry_msgs::msg::Vector3> extractTrajectory(const std::vector<int> &path_indices, const std::vector<geometry_msgs::msg::Point> &nodes);
+    void publishMarker(const std::vector<geometry_msgs::msg::Vector3> &trajectory);
+
     // Random number generation
     std::mt19937 rng_;
     std::uniform_real_distribution<double> dist_;
@@ -57,11 +67,23 @@ private:
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr roadmap_pub_;
     rclcpp::Publisher<mm_interfaces::msg::UndirectedGraph>::SharedPtr graph_pub_;
     rclcpp::TimerBase::SharedPtr timer_;
+    rclcpp::Publisher<mm_interfaces::msg::TrajectoryDiff>::SharedPtr trajectory_publisher_;
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_publisher_;
 
     //Disjoint-Set Operations
     int find(int node);
     void unionNodes(int node1, int node2);
 
+    bool graph_received_;
+    std::vector<geometry_msgs::msg::Vector3> trajectory;
+
+    int nearestNode(const mm_interfaces::msg::UndirectedGraph::SharedPtr msg, std::vector<double> position);
+
+    std::vector<double> source_position;
+    int source;
+    std::vector<double> target_position;
+    int target;
+
 };
 
-#endif // PRM_PLANNER_HPP
+#endif // PATH_PLANNER_HPP
