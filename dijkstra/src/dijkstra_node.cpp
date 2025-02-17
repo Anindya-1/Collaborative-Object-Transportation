@@ -23,15 +23,6 @@ DijkstraNode::DijkstraNode() : Node("dijkstra_node"),
 
 void DijkstraNode::graphCallback(const mm_interfaces::msg::UndirectedGraph::SharedPtr msg) {
 
-    mm_interfaces::msg::TerminalPoints term_pt_msg;
-    term_pt_msg.source.x = source_position[0];
-    term_pt_msg.source.y = source_position[1];
-
-    term_pt_msg.target.x = target_position[0];
-    term_pt_msg.target.y = target_position[1];
-
-    terminal_pt_publisher_->publish(term_pt_msg);
-
     if (!graph_received_) {
         RCLCPP_INFO(this->get_logger(), "Received graph data.");
         graph_received_ = true;
@@ -57,9 +48,7 @@ void DijkstraNode::graphCallback(const mm_interfaces::msg::UndirectedGraph::Shar
         target = nearestNode(msg, target_position);
 
         auto path_indices = computeDijkstra(source, target, adj_matrix);
-        trajectory = extractTrajectory(path_indices, msg->nodes);
-
-        
+        trajectory = extractTrajectory(path_indices, msg->nodes); 
     }
     
 

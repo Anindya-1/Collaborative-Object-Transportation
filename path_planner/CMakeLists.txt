@@ -30,9 +30,9 @@ install(TARGETS
    DESTINATION lib/${PROJECT_NAME}
 )
 
-install(
-  DIRECTORY include/
-  DESTINATION include/
-)
+# install(
+#   DIRECTORY include/
+#   DESTINATION include/
+# )
 
 ament_package()

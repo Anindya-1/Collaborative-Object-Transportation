@@ -9,26 +9,22 @@ double euclideanDistance(const geometry_msgs::msg::Point &a, const geometry_msgs
 
 // Constructor for the PathPlanner
 PathPlanner::PathPlanner() : Node("path_planner"),
-    rng_(std::random_device{}()), dist_(0.0, 1.0), pub_flag(false), graph_received_{false} {
+    target_received(false), max_connection_attempts_at_terminal(1000), rng_(std::random_device{}()), dist_(0.0, 1.0), graph_received_{false} {
 
-    // store source and target data
-    this->declare_parameter<std::vector<double>>("source", {0.0, 0.0, 0.0});
-    this->declare_parameter<std::vector<double>>("target", {1.0, 1.0, 0.0});
-
-    this->get_parameter("source", source_position);
-    this->get_parameter("target", target_position);
-
+    // Declare PRM parameters
     this->declare_parameter("sample_size", 10000);
     this->declare_parameter("map_size", 5.0);
     this->declare_parameter("obs_rad", 0.2);
     this->declare_parameter("connection_radius", 0.50);
     this->declare_parameter("max_connection_count", 30);
+    this->declare_parameter("max_connection_attempts", 100);
     
     // Initialize the PRM parameters
     num_samples_ = this->get_parameter("sample_size").as_int();       // Number of random samples
     connection_radius_ = this->get_parameter("connection_radius").as_double();  // Max distance for connecting nodes
     map_size_ = this->get_parameter("map_size").as_double();          // Map is in [0, map_size_] x [0, map_size_]
     max_connection_per_node = this->get_parameter("max_connection_count").as_int();;
+    max_connection_attempts = this->get_parameter("max_connection_attempts").as_int();
     obs_rad = this->get_parameter("obs_rad").as_double();
 
     // Example obstacles (in normalized coordinates)
@@ -38,14 +34,18 @@ PathPlanner::PathPlanner() : Node("path_planner"),
 
     // Publishers for visualizing PRM
     roadmap_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("prm_roadmap", 10);
-    graph_pub_ = this->create_publisher<mm_interfaces::msg::UndirectedGraph>("graph", 10);
+    // graph_pub_ = this->create_publisher<mm_interfaces::msg::UndirectedGraph>("graph", 10);
     trajectory_publisher_ = this->create_publisher<mm_interfaces::msg::TrajectoryDiff>("trajectory", 10);
     marker_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("trajectory_marker", 10);
 
     generateRandomSamples();
     constructRoadmap();
 
-    // Timer to run the PRM algorithm
+    // Trajectory terminal points subsriber
+    terminal_pts_subscription_ = this->create_subscription<mm_interfaces::msg::TerminalPoints>(
+        "terminal_points", 10, std::bind(&PathPlanner::ComputeTrajectory, this, std::placeholders::_1));
+
+    // Timer to run the PRM+Dijkstra algorithm
     timer_ = this->create_wall_timer(
         std::chrono::seconds(1), std::bind(&PathPlanner::runPRM, this));
 }
@@ -54,6 +54,9 @@ void PathPlanner::runPRM() {
     publishRoadmap();
     publishGraph();
     publishObstacles();
+    if(target_received){
+        Dijkstra();
+    }
 }
 
 void PathPlanner::generateRandomSamples() {
@@ -76,68 +79,66 @@ void PathPlanner::constructRoadmap() {
     }
 
     for (size_t i = 0; i < samples_.size(); ++i) {
+        int connections_attempted = 0;
         int connections = 0;
         for (size_t j = i + 1; j < samples_.size(); ++j) {
-            if ((euclideanDistance(samples_[i], samples_[j]) < connection_radius_) && (connections < max_connection_per_node)) {
+            if ((euclideanDistance(samples_[i], samples_[j]) < connection_radius_) && (connections < max_connection_per_node) && (connections_attempted < max_connection_attempts)) {
                 if (!isEdgeInObstacle(samples_[i], samples_[j])) {
                     // Check for cycles
                     if (find(i) != find(j)) {
                         edges_.emplace_back(i, j);
                         unionNodes(i, j); // Merge the components
+                        connections++;
                     }
                 }
             }
-            connections++;
+            connections_attempted++;
         }
     }
+
+    runPRM();
 }
 
-void PathPlanner::Dijkstra(const mm_interfaces::msg::UndirectedGraph::SharedPtr msg) {
+void PathPlanner::updateRoadmap(const geometry_msgs::msg::Point &s, const geometry_msgs::msg::Point &t){
 
-    // mm_interfaces::msg::TerminalPoints term_pt_msg;
-    // term_pt_msg.source.x = source_position[0];
-    // term_pt_msg.source.y = source_position[1];
-
-    // term_pt_msg.target.x = target_position[0];
-    // term_pt_msg.target.y = target_position[1];
-
-    // terminal_pt_publisher_->publish(term_pt_msg);
-
-    if (!graph_received_) {
-        RCLCPP_INFO(this->get_logger(), "Received graph data.");
-        graph_received_ = true;
-
-        // Create an adjacency matrix from the edges
-        int n = msg->nodes.size();
-        std::vector<std::vector<float>> adj_matrix(n, std::vector<float>(n, std::numeric_limits<float>::infinity()));
-
-        for (const auto &edge : msg->edges) {
-            int a = edge.a;
-            int b = edge.b;
-            if (a >= 0 && b >= 0 && a < n && b < n) {
-                float distance = std::sqrt(
-                    std::pow(msg->nodes[a].x - msg->nodes[b].x, 2) +
-                    std::pow(msg->nodes[a].y - msg->nodes[b].y, 2) +
-                    std::pow(msg->nodes[a].z - msg->nodes[b].z, 2));
-                adj_matrix[a][b] = distance;
-                adj_matrix[b][a] = distance;  // Assuming undirected graph
-            }
-        }
-
-        source = nearestNode(msg, source_position);
-        target = nearestNode(msg, target_position);
-
-        auto path_indices = computeDijkstra(source, target, adj_matrix);
-        trajectory = extractTrajectory(path_indices, msg->nodes);    
+    if (isPointInObstacle(s) || isPointInObstacle(t)) {
+        RCLCPP_WARN(this->get_logger(), "Attempted to add points inside an obstacle! Skipping update.");
+        return;
     }
-    
 
-    mm_interfaces::msg::TrajectoryDiff trajectory_msg;
-    trajectory_msg.trajectory = trajectory;
-    trajectory_publisher_->publish(trajectory_msg);
+    samples_.push_back(s);
+    samples_.push_back(t);
 
-    // Publish the trajectory as a marker
-    publishMarker(trajectory);
+    size_t source_idx = samples_.size() - 2;  // Index of s
+    size_t target_idx = samples_.size() - 1; // Index of t
+
+    // Resize and initialize new parents
+    parent_.resize(samples_.size());
+    parent_[source_idx] = source_idx;
+    parent_[target_idx] = target_idx;
+
+    for (size_t i = source_idx; i <= target_idx; ++i) {
+        int connections = 0;
+        int connections_attempted = 0;
+        for (size_t j = 0; j < samples_.size(); ++j) {
+            if (i == j) continue; // Skip self-connection
+
+            if ((euclideanDistance(samples_[i], samples_[j]) < connection_radius_) && (connections < max_connection_per_node) && (connections_attempted < max_connection_attempts_at_terminal)) {
+                if (!isEdgeInObstacle(samples_[i], samples_[j])) {
+                    // Check for cycles
+                    if (find(i) != find(j)) {
+                        edges_.emplace_back(i, j);
+                        unionNodes(i, j); // Merge the components
+                        connections++;
+                    }
+                }
+            }
+            connections_attempted++;
+        }
+    }
+
+    publishGraph();
+
 }
 
 void PathPlanner::publishRoadmap() {
@@ -194,12 +195,8 @@ void PathPlanner::publishGraph() {
     }
     R.edges = e;
 
-    graph_pub_->publish(R);
+    graph = R;
 
-    if(pub_flag==false){
-        RCLCPP_INFO(this->get_logger(), "Graph published");
-        pub_flag = true;
-    }
 }
 
 void PathPlanner::publishObstacles() {
@@ -272,6 +269,61 @@ void PathPlanner::unionNodes(int node1, int node2) {
     if (root1 != root2) {
         parent_[root1] = root2; // Merge components
     }
+}
+
+void PathPlanner::ComputeTrajectory(const mm_interfaces::msg::TerminalPoints::SharedPtr terminal_pts) {
+    RCLCPP_INFO(this->get_logger(), "New terminal Points obtained. Recomputing the trajectory.");
+
+    source_position.x = terminal_pts->source.x;
+    source_position.y = terminal_pts->source.y;
+    target_position.x = terminal_pts->target.x;
+    target_position.y = terminal_pts->target.y;
+
+    updateRoadmap(source_position, target_position);
+
+    graph_received_ = false;
+    target_received = true;
+
+    Dijkstra();
+}
+
+void PathPlanner::Dijkstra() {
+
+    if (!graph_received_) {
+        mm_interfaces::msg::UndirectedGraph::SharedPtr msg = std::make_shared<mm_interfaces::msg::UndirectedGraph>(graph);
+        RCLCPP_INFO(this->get_logger(), "Received graph data.");
+        graph_received_ = true;
+
+        // Create an adjacency matrix from the edges
+        int n = msg->nodes.size();
+        std::vector<std::vector<float>> adj_matrix(n, std::vector<float>(n, std::numeric_limits<float>::infinity()));
+
+        for (const auto &edge : msg->edges) {
+            int a = edge.a;
+            int b = edge.b;
+            if (a >= 0 && b >= 0 && a < n && b < n) {
+                float distance = std::sqrt(
+                    std::pow(msg->nodes[a].x - msg->nodes[b].x, 2) +
+                    std::pow(msg->nodes[a].y - msg->nodes[b].y, 2) +
+                    std::pow(msg->nodes[a].z - msg->nodes[b].z, 2));
+                adj_matrix[a][b] = distance;
+                adj_matrix[b][a] = distance;  // Assuming undirected graph
+            }
+        }
+
+        source = samples_.size() - 2;
+        target = samples_.size() - 1;
+
+        auto path_indices = computeDijkstra(source, target, adj_matrix);
+        trajectory = extractTrajectory(path_indices, msg->nodes);
+        
+    }
+    mm_interfaces::msg::TrajectoryDiff trajectory_msg;
+    trajectory_msg.trajectory = trajectory;
+    trajectory_publisher_->publish(trajectory_msg);
+
+    // Publish the trajectory as a marker
+    publishMarker(trajectory);
 }
 
 void PathPlanner::publishMarker(const std::vector<geometry_msgs::msg::Vector3> &trajectory) {
@@ -350,8 +402,8 @@ std::vector<int> PathPlanner::computeDijkstra(int source, int target, const std:
 std::vector<geometry_msgs::msg::Vector3> PathPlanner::extractTrajectory(const std::vector<int> &path_indices, const std::vector<geometry_msgs::msg::Point> &nodes) {
     std::vector<geometry_msgs::msg::Vector3> trajectory;
     geometry_msgs::msg::Vector3 source_waypoint;
-    source_waypoint.x = source_position[0];
-    source_waypoint.y = source_position[1];
+    source_waypoint.x = source_position.x;
+    source_waypoint.y = source_position.y;
     // source_waypoint.z = source_position[2];
     source_waypoint.z = 0.0;
     trajectory.push_back(source_waypoint);
@@ -364,32 +416,32 @@ std::vector<geometry_msgs::msg::Vector3> PathPlanner::extractTrajectory(const st
         trajectory.push_back(point);
     }
     geometry_msgs::msg::Vector3 target_waypoint;
-    target_waypoint.x = target_position[0];
-    target_waypoint.y = target_position[1];
+    target_waypoint.x = target_position.x;
+    target_waypoint.y = target_position.y;
     // target_waypoint.z = target_position[2];
     target_waypoint.z = 0.0;
     trajectory.push_back(target_waypoint);
     return trajectory;
 }
 
-int PathPlanner::nearestNode(const mm_interfaces::msg::UndirectedGraph::SharedPtr graph, std::vector<double> position){
-    int node_num = 0;
-    int min_node_num = 0;
-    int dist = INT32_MAX;
-    geometry_msgs::msg::Point pos;
-    pos.x = position[0];
-    pos.y = position[1];
-    pos.z = position[2];
-    for(auto n:graph->nodes){
-        double dist_from_pos = euclideanDistance(pos, n);
-        if(dist_from_pos < dist){
-            min_node_num = node_num;
-            dist = dist_from_pos;
-        }
-        node_num++;
-    }
-    return min_node_num;
-}
+// int PathPlanner::nearestNode(const mm_interfaces::msg::UndirectedGraph::SharedPtr graph, std::vector<double> position){
+//     int node_num = 0;
+//     int min_node_num = 0;
+//     int dist = INT32_MAX;
+//     geometry_msgs::msg::Point pos;
+//     pos.x = position[0];
+//     pos.y = position[1];
+//     pos.z = position[2];
+//     for(auto n:graph->nodes){
+//         double dist_from_pos = euclideanDistance(pos, n);
+//         if(dist_from_pos < dist){
+//             min_node_num = node_num;
+//             dist = dist_from_pos;
+//         }
+//         node_num++;
+//     }
+//     return min_node_num;
+// }
 
 int main(int argc, char **argv) {
     rclcpp::init(argc, argv);

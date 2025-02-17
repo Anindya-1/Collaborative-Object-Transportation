@@ -36,11 +36,13 @@ private:
     void publishRoadmap();
     void publishObstacles();
     void publishGraph();
-
+    void updateRoadmap(const geometry_msgs::msg::Point &s, const geometry_msgs::msg::Point &t);
+    
     bool isPointInObstacle(const geometry_msgs::msg::Point &p);
     bool isEdgeInObstacle(const geometry_msgs::msg::Point &a, const geometry_msgs::msg::Point &b);
 
-    bool pub_flag;
+    bool target_received;
+
 
     // PRM parameters
     int num_samples_;
@@ -48,13 +50,17 @@ private:
     double map_size_;
     double obs_rad;
     int max_connection_per_node;
+    int max_connection_attempts;
+    int max_connection_attempts_at_terminal;
     std::vector<geometry_msgs::msg::Point> samples_;
     std::vector<std::pair<size_t, size_t>> edges_;
     std::vector<Point2D> obstacles_;
     std::vector<int> parent_;  // Disjoint-set to prevent cycles
+    mm_interfaces::msg::UndirectedGraph graph;
 
     // Dijkstra functions
-    void Dijkstra(const mm_interfaces::msg::UndirectedGraph::SharedPtr msg);
+    void ComputeTrajectory(const mm_interfaces::msg::TerminalPoints::SharedPtr terminal_pts);
+    void Dijkstra();
     std::vector<int> computeDijkstra(int source, int target, const std::vector<std::vector<float>> &adj_matrix);
     std::vector<geometry_msgs::msg::Vector3> extractTrajectory(const std::vector<int> &path_indices, const std::vector<geometry_msgs::msg::Point> &nodes);
     void publishMarker(const std::vector<geometry_msgs::msg::Vector3> &trajectory);
@@ -70,6 +76,9 @@ private:
     rclcpp::Publisher<mm_interfaces::msg::TrajectoryDiff>::SharedPtr trajectory_publisher_;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_publisher_;
 
+    // ROS2 subscribers
+    rclcpp::Subscription<mm_interfaces::msg::TerminalPoints>::SharedPtr terminal_pts_subscription_;
+
     //Disjoint-Set Operations
     int find(int node);
     void unionNodes(int node1, int node2);
@@ -77,11 +86,11 @@ private:
     bool graph_received_;
     std::vector<geometry_msgs::msg::Vector3> trajectory;
 
-    int nearestNode(const mm_interfaces::msg::UndirectedGraph::SharedPtr msg, std::vector<double> position);
+    // int nearestNode(const mm_interfaces::msg::UndirectedGraph::SharedPtr msg, std::vector<double> position);
 
-    std::vector<double> source_position;
+    geometry_msgs::msg::Point source_position;
     int source;
-    std::vector<double> target_position;
+    geometry_msgs::msg::Point target_position;
     int target;
 
 };
