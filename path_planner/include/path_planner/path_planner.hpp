@@ -24,6 +24,7 @@ struct Point2D {
 
 // Function to calculate Euclidean distance
 double euclideanDistance(const geometry_msgs::msg::Point &a, const geometry_msgs::msg::Point &b);
+double euclideanDistance(const geometry_msgs::msg::Vector3 &a, const geometry_msgs::msg::Vector3 &b);
 
 class PathPlanner : public rclcpp::Node {
 public:
@@ -49,6 +50,9 @@ private:
     double connection_radius_;
     double map_size_;
     double obs_rad;
+    double obs_tolerance;
+    double robot_rad;
+    double rod_length;
     int max_connection_per_node;
     int max_connection_attempts;
     int max_connection_attempts_at_terminal;
@@ -63,7 +67,10 @@ private:
     void Dijkstra();
     std::vector<int> computeDijkstra(int source, int target, const std::vector<std::vector<float>> &adj_matrix);
     std::vector<geometry_msgs::msg::Vector3> extractTrajectory(const std::vector<int> &path_indices, const std::vector<geometry_msgs::msg::Point> &nodes);
-    void publishMarker(const std::vector<geometry_msgs::msg::Vector3> &trajectory);
+    void publishMarker_red(const std::vector<geometry_msgs::msg::Vector3> &trajectory);
+    void publishMarker_blue(const std::vector<geometry_msgs::msg::Vector3> &trajectory);
+    void publishMarker_black1(const std::vector<geometry_msgs::msg::Vector3> &trajectory);
+    void publishMarker_black2(const std::vector<geometry_msgs::msg::Vector3> &trajectory);
 
     // Random number generation
     std::mt19937 rng_;
@@ -73,8 +80,13 @@ private:
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr roadmap_pub_;
     rclcpp::Publisher<mm_interfaces::msg::UndirectedGraph>::SharedPtr graph_pub_;
     rclcpp::TimerBase::SharedPtr timer_;
-    rclcpp::Publisher<mm_interfaces::msg::TrajectoryDiff>::SharedPtr trajectory_publisher_;
+    rclcpp::Publisher<mm_interfaces::msg::TrajectoryDiff>::SharedPtr leader_trajectory_publisher_;
+    rclcpp::Publisher<mm_interfaces::msg::TrajectoryDiff>::SharedPtr follower_trajectory_publisher_;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_publisher_;
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_publisher2_;
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_publisher_l_;
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_publisher_f_;
+
 
     // ROS2 subscribers
     rclcpp::Subscription<mm_interfaces::msg::TerminalPoints>::SharedPtr terminal_pts_subscription_;
@@ -85,6 +97,9 @@ private:
 
     bool graph_received_;
     std::vector<geometry_msgs::msg::Vector3> trajectory;
+    std::vector<geometry_msgs::msg::Vector3> smoothened_trajectory;
+    std::vector<geometry_msgs::msg::Vector3> leader_trajectory;
+    std::vector<geometry_msgs::msg::Vector3> follower_trajectory;
 
     // int nearestNode(const mm_interfaces::msg::UndirectedGraph::SharedPtr msg, std::vector<double> position);
 
@@ -93,6 +108,9 @@ private:
     geometry_msgs::msg::Point target_position;
     int target;
 
+    std::vector<geometry_msgs::msg::Vector3> shortcutPath(const std::vector<geometry_msgs::msg::Vector3>& trajectory);
+    std::vector<geometry_msgs::msg::Vector3> interpolateTrajectory(const std::vector<geometry_msgs::msg::Vector3>& waypoints);
+    std::pair<std::vector<geometry_msgs::msg::Vector3>, std::vector<geometry_msgs::msg::Vector3>> shiftTrajectory(const std::vector<geometry_msgs::msg::Vector3>& waypoints);
 };
 
 #endif // PATH_PLANNER_HPP
