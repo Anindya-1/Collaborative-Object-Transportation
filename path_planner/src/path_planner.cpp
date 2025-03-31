@@ -16,11 +16,11 @@ PathPlanner::PathPlanner() : Node("path_planner"),
     target_received(false), robot_rad(0.13), rod_length(0.34), max_connection_attempts_at_terminal(1000), rng_(std::random_device{}()), dist_(0.0, 1.0), graph_received_{false} {
 
     // Declare PRM parameters
-    this->declare_parameter("sample_size", 10000);
-    this->declare_parameter("map_size", 5.0);
+    this->declare_parameter("sample_size", 20000);
+    this->declare_parameter("map_size", 10.0);
     this->declare_parameter("obs_rad", 0.1);
-    this->declare_parameter("connection_radius", 0.50);
-    this->declare_parameter("max_connection_count", 30);
+    this->declare_parameter("connection_radius", 0.75);
+    this->declare_parameter("max_connection_count", 50);
     this->declare_parameter("max_connection_attempts", 100);
     
     // Initialize the PRM parameters
@@ -32,9 +32,13 @@ PathPlanner::PathPlanner() : Node("path_planner"),
     obs_rad = this->get_parameter("obs_rad").as_double();
 
     // Example obstacles (in normalized coordinates)
-    obstacles_ = { {0.8, 2.8}, {2.3, 1.7}, {8.9, 2.0} 
+    // obstacles_ = { {0.8, 2.8}, {2.3, 1.7}, {8.9, 2.0} 
+    //     , {8.5, 9.5}, {2.3, 9.3}, {6.5, 4.5}, {4.3, 6.7},
+    //     {4.5, 1.5}, {8.3, 6.7}, {2.5, 7.5}, {1.3, 5.7} };
+
+    obstacles_ = { {2.3, 1.7}, {8.9, 2.0} 
         , {8.5, 9.5}, {2.3, 9.3}, {6.5, 4.5}, {4.3, 6.7},
-        {4.5, 1.5}, {8.3, 6.7}, {2.5, 7.5}, {1.3, 5.7} };
+        {4.5, 1.5}, {8.3, 6.7}, {1.3, 5.7} };
 
     obs_tolerance = 0.05;
 
@@ -243,7 +247,7 @@ bool PathPlanner::isPointInObstacle(const geometry_msgs::msg::Point &p) {
         obs_.x = obs.x;
         obs_.y = obs.y;
         obs_.z = 0.0;
-        if (euclideanDistance(p, obs_) < obs_rad + obs_tolerance + (2*(robot_rad) + rod_length) ) { // Obstacle radius = 0.1
+        if (euclideanDistance(p, obs_) < obs_rad + obs_tolerance + ((2*(robot_rad) + rod_length)*0.5) ) { // Obstacle radius = 0.1
             return true;
         }
     }
@@ -370,6 +374,76 @@ void PathPlanner::Dijkstra() {
 
     publishMarker_black1(leader_trajectory);
     publishMarker_black2(follower_trajectory);
+}
+
+std::vector<int> PathPlanner::computeDijkstra(int source, int target, const std::vector<std::vector<float>> &adj_matrix) {
+    int n = adj_matrix.size();
+    std::vector<float> distances(n, std::numeric_limits<float>::infinity());
+    std::vector<int> previous(n, -1);
+    std::vector<bool> visited(n, false);
+
+    distances[source] = 0.0f;
+
+    using Node = std::pair<float, int>;
+    std::priority_queue<Node, std::vector<Node>, std::greater<Node>> pq;
+    pq.push({0.0f, source});
+
+    while (!pq.empty()) {
+        int u = pq.top().second;
+        pq.pop();
+
+        if (visited[u]) continue;
+        visited[u] = true;
+
+        for (int v = 0; v < n; ++v) {
+            if (!visited[v] && adj_matrix[u][v] < std::numeric_limits<float>::infinity()) {
+                float new_dist = distances[u] + adj_matrix[u][v];
+                if (new_dist < distances[v]) {
+                    distances[v] = new_dist;
+                    previous[v] = u;
+                    pq.push({new_dist, v});
+                }
+            }
+        }
+    }
+
+    std::vector<int> path;
+    for (int at = target; at != -1; at = previous[at]) {
+        path.push_back(at);
+    }
+    std::reverse(path.begin(), path.end());
+
+    if (path.front() != source) {
+        RCLCPP_WARN(this->get_logger(), "No path found from source to target.");
+        return {};
+    }
+
+    return path;
+}
+
+std::vector<geometry_msgs::msg::Vector3> PathPlanner::extractTrajectory(const std::vector<int> &path_indices, const std::vector<geometry_msgs::msg::Point> &nodes) {
+    std::vector<geometry_msgs::msg::Vector3> trajectory;
+    geometry_msgs::msg::Vector3 source_waypoint;
+    source_waypoint.x = source_position.x;
+    source_waypoint.y = source_position.y;
+    // source_waypoint.z = source_position[2];
+    source_waypoint.z = 0.0;
+    trajectory.push_back(source_waypoint);
+    for (int index : path_indices) {
+        geometry_msgs::msg::Vector3 point;
+        point.x = nodes[index].x;
+        point.y = nodes[index].y;
+        // point.z = nodes[index].z;
+        point.z = 0.0;
+        trajectory.push_back(point);
+    }
+    geometry_msgs::msg::Vector3 target_waypoint;
+    target_waypoint.x = target_position.x;
+    target_waypoint.y = target_position.y;
+    // target_waypoint.z = target_position[2];
+    target_waypoint.z = 0.0;
+    trajectory.push_back(target_waypoint);
+    return trajectory;
 }
 
 std::vector<geometry_msgs::msg::Vector3> PathPlanner::shortcutPath(const std::vector<geometry_msgs::msg::Vector3>& trajectory) {
@@ -590,75 +664,6 @@ void PathPlanner::publishMarker_black2(const std::vector<geometry_msgs::msg::Vec
     marker_publisher_f_->publish(marker);
 }
 
-std::vector<int> PathPlanner::computeDijkstra(int source, int target, const std::vector<std::vector<float>> &adj_matrix) {
-    int n = adj_matrix.size();
-    std::vector<float> distances(n, std::numeric_limits<float>::infinity());
-    std::vector<int> previous(n, -1);
-    std::vector<bool> visited(n, false);
-
-    distances[source] = 0.0f;
-
-    using Node = std::pair<float, int>;
-    std::priority_queue<Node, std::vector<Node>, std::greater<Node>> pq;
-    pq.push({0.0f, source});
-
-    while (!pq.empty()) {
-        int u = pq.top().second;
-        pq.pop();
-
-        if (visited[u]) continue;
-        visited[u] = true;
-
-        for (int v = 0; v < n; ++v) {
-            if (!visited[v] && adj_matrix[u][v] < std::numeric_limits<float>::infinity()) {
-                float new_dist = distances[u] + adj_matrix[u][v];
-                if (new_dist < distances[v]) {
-                    distances[v] = new_dist;
-                    previous[v] = u;
-                    pq.push({new_dist, v});
-                }
-            }
-        }
-    }
-
-    std::vector<int> path;
-    for (int at = target; at != -1; at = previous[at]) {
-        path.push_back(at);
-    }
-    std::reverse(path.begin(), path.end());
-
-    if (path.front() != source) {
-        RCLCPP_WARN(this->get_logger(), "No path found from source to target.");
-        return {};
-    }
-
-    return path;
-}
-
-std::vector<geometry_msgs::msg::Vector3> PathPlanner::extractTrajectory(const std::vector<int> &path_indices, const std::vector<geometry_msgs::msg::Point> &nodes) {
-    std::vector<geometry_msgs::msg::Vector3> trajectory;
-    geometry_msgs::msg::Vector3 source_waypoint;
-    source_waypoint.x = source_position.x;
-    source_waypoint.y = source_position.y;
-    // source_waypoint.z = source_position[2];
-    source_waypoint.z = 0.0;
-    trajectory.push_back(source_waypoint);
-    for (int index : path_indices) {
-        geometry_msgs::msg::Vector3 point;
-        point.x = nodes[index].x;
-        point.y = nodes[index].y;
-        // point.z = nodes[index].z;
-        point.z = 0.0;
-        trajectory.push_back(point);
-    }
-    geometry_msgs::msg::Vector3 target_waypoint;
-    target_waypoint.x = target_position.x;
-    target_waypoint.y = target_position.y;
-    // target_waypoint.z = target_position[2];
-    target_waypoint.z = 0.0;
-    trajectory.push_back(target_waypoint);
-    return trajectory;
-}
 
 int main(int argc, char **argv) {
     rclcpp::init(argc, argv);

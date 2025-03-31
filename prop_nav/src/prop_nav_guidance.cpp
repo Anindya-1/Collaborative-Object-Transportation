@@ -60,23 +60,25 @@ void PropNavGuide::setGoalDistanceTolerance(double tolerance) {
 }
 
 void PropNavGuide::readTrajectoryCallback(const mm_interfaces::msg::TrajectoryDiff::SharedPtr traj){
-  for(auto goal:traj->trajectory){
-    tf2::Vector3 waypoint;
-    waypoint.setX(goal.x);
-    waypoint.setY(goal.y);
-    waypoint.setZ(goal.z);
+    if(no_goal_received_ == true){
+        for(auto goal:traj->trajectory){
+            tf2::Vector3 waypoint;
+            waypoint.setX(goal.x);
+            waypoint.setY(goal.y);
+            waypoint.setZ(goal.z);
 
-    trajectory_.push_back(waypoint);
-    trajectory_point_count++;
-  }
-  RCLCPP_INFO(this->get_logger(), "Trajectory has %d points", trajectory_point_count);
-  if(trajectory_point_count > 0 && !trajectory_.empty()){
-    no_goal_received_ = true;
-    tf2::Vector3 initial_waypoint{trajectory_[0]};
-    goal_.setX(initial_waypoint.getX());
-    goal_.setY(initial_waypoint.getY());
-    goal_.setY(initial_waypoint.getZ());
-  }
+            trajectory_.push_back(waypoint);
+            trajectory_point_count++;
+        }
+        RCLCPP_INFO(this->get_logger(), "Trajectory has %d points", trajectory_point_count);
+        if(trajectory_point_count > 0 && !trajectory_.empty()){
+            no_goal_received_ = true;
+            tf2::Vector3 initial_waypoint{trajectory_[0]};
+            goal_.setX(initial_waypoint.getX());
+            goal_.setY(initial_waypoint.getY());
+            goal_.setY(initial_waypoint.getZ());
+        }   
+    }   
 }
 
 void PropNavGuide::readOdometryCallback(const nav_msgs::msg::Odometry::SharedPtr odom){
@@ -120,17 +122,17 @@ void PropNavGuide::readOdometryCallback(const nav_msgs::msg::Odometry::SharedPtr
     double distance_to_goal = goal_position.distance(robot_position);
 
     if (distance_to_goal < tolerance_) {
-    if(count >= trajectory_point_count){
-        RCLCPP_INFO(this->get_logger(), "Omni has reached its final position");
-        no_goal_received_ = false;
-        cmd_vel_publisher_->publish(cmd_vel_);
-    }
-    else{
-        goal_ = trajectory_.at(count);
-        RCLCPP_INFO(this->get_logger(), "Receiveid goal point: (%.2f, %.2f), yaw: %.2f",
-        goal_.getX(), goal_.getY(), goal_.getZ());
-        count++;
+        if(count >= trajectory_point_count){
+            RCLCPP_INFO(this->get_logger(), "Robot has reached its final position");
+            no_goal_received_ = false;
+            cmd_vel_publisher_->publish(cmd_vel_);
         }
+        else{
+            goal_ = trajectory_.at(count);
+            RCLCPP_INFO(this->get_logger(), "Receiveid goal point: (%.2f, %.2f)",
+            goal_.getX(), goal_.getY());
+            count++;
+            }
         return;
     }
 
