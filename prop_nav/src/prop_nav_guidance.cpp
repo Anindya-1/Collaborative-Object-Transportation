@@ -78,7 +78,7 @@ void PropNavGuide::readTrajectoryCallback(const mm_interfaces::msg::TrajectoryDi
             goal_.setY(initial_waypoint.getY());
             goal_.setY(initial_waypoint.getZ());
         }   
-    }   
+    }
 }
 
 void PropNavGuide::readOdometryCallback(const nav_msgs::msg::Odometry::SharedPtr odom){

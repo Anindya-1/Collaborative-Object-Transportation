@@ -3,15 +3,16 @@
         {
             "name": "Linux",
             "includePath": [
-                "/home/csl-a/mtp_ws/install/omni_control/include/**",
                 "/home/csl-a/mtp_ws/install/prop_nav/include/**",
                 "/home/csl-a/mtp_ws/install/prm_planner/include/**",
                 "/home/csl-a/mtp_ws/install/dijkstra/include/**",
-                "/home/csl-a/mtp_ws/install/omnidirectional_controllers/include/**",
                 "${workspaceFolder}/**",
                 "/opt/ros/humble/include/**",
                 "~/mtp_ws/install/mm_interfaces/include/**",
-                "~/mtp_ws/install/path_planner/include/**"
+                "~/mtp_ws/install/path_planner/include/**",
+                "~/mtp_ws/install/navigator/include/**",
+                "~/mtp_ws/install/inv_kin_solver/include/**",
+                "~/alglib-cpp/src/**"
             ],
             "defines": [],
             "cStandard": "c17",

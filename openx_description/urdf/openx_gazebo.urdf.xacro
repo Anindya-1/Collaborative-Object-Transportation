@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-
-<robot name="openx" xmlns:xacro="http://ros.org/wiki/xacro">
-
-    <xacro:include filename="openx_base_ground.xacro" />
-    <xacro:include filename="openx_gazebo_control.xacro" />
-
-</robot>

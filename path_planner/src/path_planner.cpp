@@ -45,8 +45,8 @@ PathPlanner::PathPlanner() : Node("path_planner"),
     // Publishers for visualizing PRM
     roadmap_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("prm_roadmap", 10);
     // graph_pub_ = this->create_publisher<mm_interfaces::msg::UndirectedGraph>("graph", 10);
-    leader_trajectory_publisher_ = this->create_publisher<mm_interfaces::msg::TrajectoryDiff>("leader_trajectory", 10);
-    follower_trajectory_publisher_ = this->create_publisher<mm_interfaces::msg::TrajectoryDiff>("follower_trajectory", 10);
+    leader_trajectory_publisher_ = this->create_publisher<mm_interfaces::msg::TrajectoryDiff>("robot1/trajectory", 10);
+    follower_trajectory_publisher_ = this->create_publisher<mm_interfaces::msg::TrajectoryDiff>("robot2/trajectory", 10);
     marker_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("trajectory_marker", 10);
     marker_publisher2_ = this->create_publisher<visualization_msgs::msg::Marker>("smoothened_trajectory_marker", 10);
 
@@ -159,7 +159,7 @@ void PathPlanner::updateRoadmap(const geometry_msgs::msg::Point &s, const geomet
 void PathPlanner::publishRoadmap() {
     // Publish the roadmap as a set of lines
     visualization_msgs::msg::Marker roadmap_msg;
-    roadmap_msg.header.frame_id = "map";
+    roadmap_msg.header.frame_id = "odom";
     roadmap_msg.header.stamp = this->get_clock()->now();
     roadmap_msg.ns = "prm";
     roadmap_msg.id = 0;
@@ -216,7 +216,7 @@ void PathPlanner::publishGraph() {
 
 void PathPlanner::publishObstacles() {
     visualization_msgs::msg::Marker obstacles_msg;
-    obstacles_msg.header.frame_id = "map";
+    obstacles_msg.header.frame_id = "odom";
     obstacles_msg.header.stamp = this->get_clock()->now();
     obstacles_msg.ns = "obstacles";
     obstacles_msg.id = 1; // Unique ID for obstacles
@@ -554,7 +554,7 @@ std::pair<std::vector<geometry_msgs::msg::Vector3>, std::vector<geometry_msgs::m
 
 void PathPlanner::publishMarker_red(const std::vector<geometry_msgs::msg::Vector3> &trajectory) {
     visualization_msgs::msg::Marker marker;
-    marker.header.frame_id = "map"; // Change this to your desired frame
+    marker.header.frame_id = "odom"; // Change this to your desired frame
     marker.header.stamp = this->now();
     marker.ns = "trajectory";
     marker.id = 0;
@@ -582,7 +582,7 @@ void PathPlanner::publishMarker_red(const std::vector<geometry_msgs::msg::Vector
 
 void PathPlanner::publishMarker_blue(const std::vector<geometry_msgs::msg::Vector3> &trajectory) {
     visualization_msgs::msg::Marker marker;
-    marker.header.frame_id = "map"; // Change this to your desired frame
+    marker.header.frame_id = "odom"; // Change this to your desired frame
     marker.header.stamp = this->now();
     marker.ns = "trajectory";
     marker.id = 0;
@@ -610,7 +610,7 @@ void PathPlanner::publishMarker_blue(const std::vector<geometry_msgs::msg::Vecto
 
 void PathPlanner::publishMarker_black1(const std::vector<geometry_msgs::msg::Vector3> &trajectory) {
     visualization_msgs::msg::Marker marker;
-    marker.header.frame_id = "map"; // Change this to your desired frame
+    marker.header.frame_id = "odom"; // Change this to your desired frame
     marker.header.stamp = this->now();
     marker.ns = "trajectory";
     marker.id = 0;
@@ -638,7 +638,7 @@ void PathPlanner::publishMarker_black1(const std::vector<geometry_msgs::msg::Vec
 
 void PathPlanner::publishMarker_black2(const std::vector<geometry_msgs::msg::Vector3> &trajectory) {
     visualization_msgs::msg::Marker marker;
-    marker.header.frame_id = "map"; // Change this to your desired frame
+    marker.header.frame_id = "odom"; // Change this to your desired frame
     marker.header.stamp = this->now();
     marker.ns = "trajectory";
     marker.id = 0;
