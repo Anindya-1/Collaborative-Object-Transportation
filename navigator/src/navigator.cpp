@@ -22,6 +22,8 @@ Navigator::Navigator() : Node("navigator")
     std::string ee_trajectory_topic = "/" + robot_name + "/ee_trajectory";
     std::string base_cmd_topic = "/" + robot_name + "/cmd_vel";
     std::string base_odom_topic = "/" + robot_name + "/odom";
+    std::string move_ahead_topic = "/" + robot_name + "/move_ahead";
+    std::string reached_waypoint_topic = "/" + robot_name + "/reached_waypoint";
 
     trajectory_subscription_ = this->create_subscription<mm_interfaces::msg::TrajectoryDiff>(
     trajectory_topic, 1, std::bind(&Navigator::readTrajectoryCallback, this, std::placeholders::_1));
@@ -31,7 +33,14 @@ Navigator::Navigator() : Node("navigator")
     odom_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>(
         base_odom_topic, 1, std::bind(&Navigator::readOdometryCallback, this, std::placeholders::_1));
 
+    move_ahead_subscription_ = this->create_subscription<std_msgs::msg::Bool>(
+        move_ahead_topic, 1, std::bind(&Navigator::readMoveAheadCallback, this, std::placeholders::_1));
+
+    move_ahead_ = true;
+
     cmd_vel_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>(base_cmd_topic, 10);
+
+    reached_waypoint_publisher_ = this->create_publisher<std_msgs::msg::Bool>(reached_waypoint_topic, 10);
 
     timer_ = this->create_wall_timer(
         std::chrono::milliseconds(static_cast<int>(delta_t*1000)),
@@ -94,12 +103,24 @@ void Navigator::readOdometryCallback(const nav_msgs::msg::Odometry::SharedPtr od
     robot_position.setZ(0);
 }
 
+void Navigator::readMoveAheadCallback(const std_msgs::msg::Bool::SharedPtr msg) {
+    move_ahead_ = msg->data;
+    RCLCPP_INFO(this->get_logger(), "Move ahead command: %s", move_ahead_ ? "true" : "false");
+}
+
 void Navigator::timerCallback() {
     cmd_vel_.linear.x = 0.0;
     cmd_vel_.linear.y = 0.0;
     cmd_vel_.angular.z = 0.0;
 
     publish_ee_trajectory(ee_trajectory_);
+
+    if (!move_ahead_) {
+        // Robot is told to stop by sync node
+        RCLCPP_DEBUG(this->get_logger(), "Waiting for move_ahead signal...");
+        cmd_vel_publisher_->publish(cmd_vel_);
+        return;
+    }
 
     if (traj_loaded == false) {
         // RCLCPP_INFO(this->get_logger(), "Trajectory not loaded yet");
@@ -116,6 +137,10 @@ void Navigator::timerCallback() {
     double distance_to_goal = goal_position.distance(robot_position);
 
     if (distance_to_goal < tolerance_) {
+        std_msgs::msg::Bool reached_msg;
+        reached_msg.data = true;
+        reached_waypoint_publisher_->publish(reached_msg);
+
         if(count >= trajectory_point_count){
             RCLCPP_INFO(this->get_logger(), "Robot has reached its final position");
             traj_loaded = false;

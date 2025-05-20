@@ -19,6 +19,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   tf2_ros
   tf2_geometry_msgs
   mm_interfaces
+  std_msgs
 )
 
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
@@ -38,8 +39,22 @@ ament_target_dependencies(navigator
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
 
+add_executable(stop_sync_exec
+  src/stop_sync_algo.cpp
+)
+
+target_include_directories(stop_sync_exec
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
+ament_target_dependencies(stop_sync_exec
+  ${THIS_PACKAGE_INCLUDE_DEPENDS}
+)
+
 install(TARGETS
   navigator
+  stop_sync_exec
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -10,6 +10,8 @@
 #include "nav_msgs/msg/odometry.hpp"
 #include "tf2/LinearMath/Vector3.h"
 #include "mm_interfaces/msg/trajectory_diff.hpp"
+#include "std_msgs/msg/bool.hpp"
+
 
 namespace navigator {
 
@@ -23,14 +25,17 @@ public:
 protected:
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_subscription_;
     rclcpp::Subscription<mm_interfaces::msg::TrajectoryDiff>::SharedPtr trajectory_subscription_;
+    rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr move_ahead_subscription_;
     rclcpp::Publisher<mm_interfaces::msg::TrajectoryDiff>::SharedPtr ee_trajectory_publisher_;
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_publisher_;
+    rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr reached_waypoint_publisher_;
     rclcpp::TimerBase::SharedPtr timer_;
 
 private:
     void readOdometryCallback(const nav_msgs::msg::Odometry::SharedPtr odom);
     void readTrajectoryCallback(const mm_interfaces::msg::TrajectoryDiff::SharedPtr traj);
     void trajectoryReader(const mm_interfaces::msg::TrajectoryDiff::SharedPtr traj);
+    void readMoveAheadCallback(const std_msgs::msg::Bool::SharedPtr msg);
     void timerCallback();
 
     void publish_ee_trajectory(std::vector<tf2::Vector3> ee_traj);
@@ -49,6 +54,7 @@ private:
     int trajectory_point_count;
     int count;
     double lin_speed;
+    bool move_ahead_;
 
     double ee_traj_level;
 };
