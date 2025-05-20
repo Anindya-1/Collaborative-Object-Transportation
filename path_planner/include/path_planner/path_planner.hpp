@@ -8,7 +8,6 @@
 #include <geometry_msgs/msg/vector3.hpp>
 #include "visualization_msgs/msg/marker.hpp"
 #include "mm_interfaces/msg/undirected_graph.hpp"
-#include "mm_interfaces/msg/pair.hpp"
 #include "mm_interfaces/msg/terminal_points.hpp"
 #include "mm_interfaces/msg/trajectory_diff.hpp"
 #include <vector>
@@ -86,7 +85,6 @@ private:
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_publisher2_;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_publisher_l_;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_publisher_f_;
-
 
     // ROS2 subscribers
     rclcpp::Subscription<mm_interfaces::msg::TerminalPoints>::SharedPtr terminal_pts_subscription_;

@@ -11,7 +11,7 @@ def generate_launch_description():
     minion_launch_file = os.path.join(
         get_package_share_directory('turtlebot3_manipulation_bringup'),
         "launch",
-        "empty_world.launch.py"
+        "multi_spawn.launch.py"
     )
 
     rviz_config_file = os.path.join(

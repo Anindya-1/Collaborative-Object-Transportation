@@ -3,10 +3,6 @@
 #include <cmath>
 #include <memory>
 
-#include "geometry_msgs/msg/twist.hpp"
-#include "nav_msgs/msg/odometry.hpp"
-#include "mm_interfaces/msg/trajectory_diff.hpp"
-
 #include "tf2/utils.h"
 #include "tf2/LinearMath/Vector3.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
@@ -15,27 +11,32 @@ namespace navigator {
 
 Navigator::Navigator() : Node("navigator")
     , traj_loaded(false), nav_const_(1.0), tolerance_(1.0), 
-    theta_LOS_rate(0.0), previous_theta_LOS(0.0), delta_t(0.02), trajectory_point_count(0), count(0), lin_speed(0.1)
+    theta_LOS_rate(0.0), previous_theta_LOS(0.0), delta_t(0.2), trajectory_point_count(0), count(0), lin_speed(0.1), ee_traj_level(0.325)
 {
     goal_.setZero();
 
-    this->declare_parameter("robot_identity", "robot1");
+    this->declare_parameter("robot_identity", "r1");
     std::string robot_name = this->get_parameter("robot_identity").as_string();
 
     std::string trajectory_topic = "/" + robot_name + "/trajectory";
+    std::string ee_trajectory_topic = "/" + robot_name + "/ee_trajectory";
+    std::string base_cmd_topic = "/" + robot_name + "/cmd_vel";
+    std::string base_odom_topic = "/" + robot_name + "/odom";
 
     trajectory_subscription_ = this->create_subscription<mm_interfaces::msg::TrajectoryDiff>(
     trajectory_topic, 1, std::bind(&Navigator::readTrajectoryCallback, this, std::placeholders::_1));
 
-    odom_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>(
-        "/odom", 1, std::bind(&Navigator::readOdometryCallback, this, std::placeholders::_1));
+    ee_trajectory_publisher_ = this->create_publisher<mm_interfaces::msg::TrajectoryDiff>(ee_trajectory_topic, 10);
 
-    cmd_vel_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
+    odom_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>(
+        base_odom_topic, 1, std::bind(&Navigator::readOdometryCallback, this, std::placeholders::_1));
+
+    cmd_vel_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>(base_cmd_topic, 10);
 
     timer_ = this->create_wall_timer(
         std::chrono::milliseconds(static_cast<int>(delta_t*1000)),
         std::bind(&Navigator::timerCallback, this));
-    
+        
     RCLCPP_INFO(this->get_logger(), "Node %s has started", this->get_logger().get_name());
 }
 
@@ -70,6 +71,11 @@ void Navigator::trajectoryReader(const mm_interfaces::msg::TrajectoryDiff::Share
         waypoint.setZ(goal.z);
 
         trajectory_.push_back(waypoint);
+
+        waypoint.setZ(ee_traj_level);
+
+        ee_trajectory_.push_back(waypoint);
+
         trajectory_point_count++;
     }
     RCLCPP_INFO(this->get_logger(), "Trajectory has %d points", trajectory_point_count);
@@ -79,21 +85,21 @@ void Navigator::trajectoryReader(const mm_interfaces::msg::TrajectoryDiff::Share
         goal_.setX(initial_waypoint.getX());
         goal_.setY(initial_waypoint.getY());
         goal_.setZ(initial_waypoint.getZ());
-    }   
+    } 
 }
 
 void Navigator::readOdometryCallback(const nav_msgs::msg::Odometry::SharedPtr odom){
-
     robot_position.setX(odom->pose.pose.position.x);
     robot_position.setY(odom->pose.pose.position.y);
     robot_position.setZ(0);
-    
 }
 
 void Navigator::timerCallback() {
     cmd_vel_.linear.x = 0.0;
     cmd_vel_.linear.y = 0.0;
     cmd_vel_.angular.z = 0.0;
+
+    publish_ee_trajectory(ee_trajectory_);
 
     if (traj_loaded == false) {
         // RCLCPP_INFO(this->get_logger(), "Trajectory not loaded yet");
@@ -138,6 +144,21 @@ void Navigator::timerCallback() {
     cmd_vel_.angular.z = ang_vel;
 
     cmd_vel_publisher_->publish(cmd_vel_);
+}
+
+void Navigator::publish_ee_trajectory(std::vector<tf2::Vector3> ee_traj){
+    std::vector<geometry_msgs::msg::Vector3> ee_trajectory;
+    for(auto goal:ee_traj){
+        geometry_msgs::msg::Vector3 waypoint;
+        waypoint.x = goal.x();
+        waypoint.y = goal.y();
+        waypoint.z = goal.z();
+
+        ee_trajectory.push_back(waypoint);
+    }
+    mm_interfaces::msg::TrajectoryDiff ee_trajectory_msg;
+    ee_trajectory_msg.trajectory = ee_trajectory;
+    ee_trajectory_publisher_->publish(ee_trajectory_msg);
 }
 
 Navigator::~Navigator() {};

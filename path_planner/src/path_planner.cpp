@@ -1,6 +1,5 @@
 #include "path_planner/path_planner.hpp"
 
-
 // Helper function to calculate Euclidean distance
 
 double euclideanDistance(const geometry_msgs::msg::Point &a, const geometry_msgs::msg::Point &b) {
@@ -45,8 +44,8 @@ PathPlanner::PathPlanner() : Node("path_planner"),
     // Publishers for visualizing PRM
     roadmap_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("prm_roadmap", 10);
     // graph_pub_ = this->create_publisher<mm_interfaces::msg::UndirectedGraph>("graph", 10);
-    leader_trajectory_publisher_ = this->create_publisher<mm_interfaces::msg::TrajectoryDiff>("robot1/trajectory", 10);
-    follower_trajectory_publisher_ = this->create_publisher<mm_interfaces::msg::TrajectoryDiff>("robot2/trajectory", 10);
+    leader_trajectory_publisher_ = this->create_publisher<mm_interfaces::msg::TrajectoryDiff>("r1/trajectory", 10);
+    follower_trajectory_publisher_ = this->create_publisher<mm_interfaces::msg::TrajectoryDiff>("r2/trajectory", 10);
     marker_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("trajectory_marker", 10);
     marker_publisher2_ = this->create_publisher<visualization_msgs::msg::Marker>("smoothened_trajectory_marker", 10);
 
@@ -240,7 +239,6 @@ void PathPlanner::publishObstacles() {
     roadmap_pub_->publish(obstacles_msg); // Use the same publisher or define a new one
 }
 
-
 bool PathPlanner::isPointInObstacle(const geometry_msgs::msg::Point &p) {
     for (const auto &obs : obstacles_) {
         geometry_msgs::msg::Point obs_;
@@ -344,29 +342,20 @@ void PathPlanner::Dijkstra() {
         auto path_indices = computeDijkstra(source, target, adj_matrix);
         trajectory = extractTrajectory(path_indices, msg->nodes);
         smoothened_trajectory = shortcutPath(trajectory);
-        // smoothened_trajectory = interpolateTrajectory(smoothened_trajectory);
 
         auto shifted_traj = shiftTrajectory(smoothened_trajectory);
         leader_trajectory = shifted_traj.first;
         follower_trajectory = shifted_traj.second;
 
+        mm_interfaces::msg::TrajectoryDiff leader_trajectory_msg;
+        leader_trajectory_msg.trajectory = leader_trajectory;
+        leader_trajectory_publisher_->publish(leader_trajectory_msg);
+
+        mm_interfaces::msg::TrajectoryDiff follower_trajectory_msg;
+        follower_trajectory_msg.trajectory = follower_trajectory;
+        follower_trajectory_publisher_->publish(follower_trajectory_msg);
+
     }
-
-    // mm_interfaces::msg::TrajectoryDiff trajectory_msg;
-    // trajectory_msg.trajectory = trajectory;
-    // trajectory_publisher_->publish(trajectory_msg);
-
-    // mm_interfaces::msg::TrajectoryDiff smoothened_trajectory_msg;
-    // smoothened_trajectory_msg.trajectory = smoothened_trajectory;
-    // smoothened_trajectory_publisher_->publish(smoothened_trajectory_msg);
-
-    mm_interfaces::msg::TrajectoryDiff leader_trajectory_msg;
-    leader_trajectory_msg.trajectory = leader_trajectory;
-    leader_trajectory_publisher_->publish(leader_trajectory_msg);
-
-    mm_interfaces::msg::TrajectoryDiff follower_trajectory_msg;
-    follower_trajectory_msg.trajectory = follower_trajectory;
-    follower_trajectory_publisher_->publish(follower_trajectory_msg);
 
     // Publish the trajectory as a marker
     publishMarker_red(trajectory);

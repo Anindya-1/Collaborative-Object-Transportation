@@ -11,6 +11,7 @@ find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(mm_interfaces REQUIRED)
+find_package(rclcpp_action REQUIRED)
 
 add_executable(path_planner 
   src/path_planner.cpp
@@ -22,17 +23,31 @@ target_include_directories(path_planner
 )
 
 ament_target_dependencies(path_planner
-  rclcpp geometry_msgs visualization_msgs mm_interfaces
+  rclcpp rclcpp_action geometry_msgs visualization_msgs mm_interfaces
+)
+
+add_executable(path_planner_action_client 
+  src/path_planner_action_client.cpp
+)
+
+target_include_directories(path_planner_action_client
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
+ament_target_dependencies(path_planner_action_client
+  rclcpp rclcpp_action geometry_msgs visualization_msgs mm_interfaces
 )
 
 install(TARGETS
-   path_planner 
+   path_planner
+   path_planner_action_client 
    DESTINATION lib/${PROJECT_NAME}
 )
 
-# install(
-#   DIRECTORY include/
-#   DESTINATION include/
-# )
+install(
+  DIRECTORY include/
+  DESTINATION include/
+)
 
 ament_package()

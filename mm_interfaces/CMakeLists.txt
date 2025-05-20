@@ -11,15 +11,19 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(geometry_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
+  #msg
   "msg/Pair.msg"
   "msg/UndirectedGraph.msg"
   "msg/Trajectory2D.msg"
   "msg/Waypoint.msg"
   "msg/TrajectoryDiff.msg"
   "msg/TerminalPoints.msg"
+
+  #action
+  "action/Trajectory2D.action"
+  
   DEPENDENCIES geometry_msgs
 )
-
 
 ament_export_dependencies(rosidl_default_runtime)
 

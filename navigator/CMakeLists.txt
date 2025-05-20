@@ -13,6 +13,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   geometry_msgs  
   nav_msgs
   rclcpp
+  rclcpp_action
   tf2
   tf2_msgs
   tf2_ros

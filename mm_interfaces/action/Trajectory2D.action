@@ -1,0 +1,8 @@
+# Goal
+geometry_msgs/Vector3[] trajectory
+---
+# Result
+bool reached_terminal_state
+---
+# Feedback (optional)
+geometry_msgs/Vector3 last_waypoint_reached
