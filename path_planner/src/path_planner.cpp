@@ -12,7 +12,7 @@ double euclideanDistance(const geometry_msgs::msg::Vector3 &a, const geometry_ms
 
 // Constructor for the PathPlanner
 PathPlanner::PathPlanner() : Node("path_planner"),
-    target_received(false), robot_rad(0.13), rod_length(0.34), max_connection_attempts_at_terminal(1000), rng_(std::random_device{}()), dist_(0.0, 1.0), graph_received_{false} {
+    target_received(false), robot_rad(0.13), rod_length(0.5), max_connection_attempts_at_terminal(1000), rng_(std::random_device{}()), dist_(0.0, 1.0), graph_received_{false} {
 
     // Declare PRM parameters
     this->declare_parameter("sample_size", 20000);

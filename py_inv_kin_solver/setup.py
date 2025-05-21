@@ -22,6 +22,8 @@ setup(
         'console_scripts': [
             'test_inv_kin = py_inv_kin_solver.test_inv_kin:main',
             'manip_control_exec = py_inv_kin_solver.manip_control:main',
+            'r1_manip_control_exec = py_inv_kin_solver.r1_manip_control:main',
+            'r2_manip_control_exec = py_inv_kin_solver.r2_manip_control:main',
         ],
     },
 )
