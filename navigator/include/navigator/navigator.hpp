@@ -12,6 +12,8 @@
 #include "mm_interfaces/msg/trajectory_diff.hpp"
 #include "std_msgs/msg/bool.hpp"
 
+#include "angles/angles.h"
+
 
 namespace navigator {
 
@@ -55,6 +57,7 @@ private:
     int count;
     double lin_speed;
     bool move_ahead_;
+    double max_ang_vel_;
 
     double ee_traj_level;
 };

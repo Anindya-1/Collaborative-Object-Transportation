@@ -20,6 +20,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   tf2_geometry_msgs
   mm_interfaces
   std_msgs
+  angles
 )
 
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})

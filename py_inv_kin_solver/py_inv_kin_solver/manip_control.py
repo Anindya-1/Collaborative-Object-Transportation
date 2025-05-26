@@ -8,6 +8,8 @@ import numpy as np
 import math
 import time
 
+import matplotlib.pyplot as plt
+
 from py_inv_kin_solver.slsqp_optimizer import solve_ik_with_constraint as solve_ik, forward_kinematics
 
 class ManipControlNode(Node):
@@ -31,13 +33,21 @@ class ManipControlNode(Node):
         self.timer = self.create_timer(self.delta_t, self.timer_callback)
         self.get_logger().info(f"Node {self.get_name()} has started")
 
+        self.mse_history = []
+        self.ee_desired_history = []
+        self.ee_estimated_history = []
+
     def create_subscriptions(self):
         self.create_subscription(TrajectoryDiff, f'/{self.robot_name}/ee_trajectory', self.read_trajectory_callback, 1)
         self.create_subscription(Odometry, f'/{self.robot_name}/odom', self.read_odometry_callback, 1)
         self.create_subscription(Twist, f'/{self.robot_name}/cmd_vel', self.read_cmd_vel_callback, 1)
+        # self.create_subscription(TrajectoryDiff, f'/ee_trajectory', self.read_trajectory_callback, 1)
+        # self.create_subscription(Odometry, f'/odom', self.read_odometry_callback, 1)
+        # self.create_subscription(Twist, f'/cmd_vel', self.read_cmd_vel_callback, 1)
 
     def create_publishers(self):
         self.traj_pub = self.create_publisher(JointTrajectory, f'/{self.robot_name}/arm_controller/joint_trajectory', 10)
+        # self.traj_pub = self.create_publisher(JointTrajectory, f'/arm_controller/joint_trajectory', 10)
 
     def read_trajectory_callback(self, msg):
         self.get_logger().info("Trajectory Received")
@@ -65,6 +75,8 @@ class ManipControlNode(Node):
             y_ee = projected_traj_pos[1] - projected_base_pos[1]
             z_ee = projected_traj_pos[2] - 0.1  # Base height
 
+
+
             self.get_logger().info(f"Solving IK for EE position: [{x_ee:.3f}, {y_ee:.3f}, {z_ee:.3f}]")
 
             joint_angles = solve_ik(x_ee, y_ee, z_ee, self.q_prev)  # must be implemented
@@ -79,8 +91,15 @@ class ManipControlNode(Node):
 
             est_ee_pos = forward_kinematics(joint_angles_fk)
 
+            self.ee_desired_history.append(np.array([x_ee, y_ee, z_ee]))
+            self.ee_estimated_history.append(est_ee_pos)        
+
             self.get_logger().info(f"Joint angles: {np.round(joint_angles, 6)}")
             self.get_logger().info(f"Estimated EE position: [{est_ee_pos[0]:.3f}, {est_ee_pos[1]:.3f}, {est_ee_pos[2]:.3f}]")
+
+            error = est_ee_pos - np.array([x_ee, y_ee, z_ee])
+            squared_error = np.dot(error, error)
+            self.mse_history.append(squared_error)
 
         self.current_base_position = next_base_pos
 
@@ -127,17 +146,16 @@ class ManipControlNode(Node):
             f"{self.robot_name}/joint2",
             f"{self.robot_name}/joint3",
             f"{self.robot_name}/joint4"
+            # f"joint1",
+            # f"joint2",
+            # f"joint3",
+            # f"joint4"
         ]
 
         # Adjust angles
         adjusted = []
         for i in range(4):
-            # if i == 1:
-            #     adjusted.append(joint_angles[i] - 1.57)
-            # elif i == 2:
-            #     adjusted.append(joint_angles[i] + 1.57)
-            # else:
-                adjusted.append(joint_angles[i])
+            adjusted.append(joint_angles[i])
 
         point = JointTrajectoryPoint()
         point.positions = adjusted
@@ -147,9 +165,32 @@ class ManipControlNode(Node):
         traj_msg.points.append(point)
         self.traj_pub.publish(traj_msg)
 
+    def plot_mse(self):
+        if not self.mse_history:
+            self.get_logger().warn("No MSE data to plot.")
+            return
+
+        time_steps = np.arange(len(self.mse_history)) * self.delta_t
+        mse_array = np.array(self.mse_history)
+
+        plt.figure()
+        plt.plot(time_steps, mse_array, label="Squared Error")
+        plt.xlabel("Time (s)")
+        plt.ylabel("Squared Error")
+        plt.title("EE Position Squared Error over Time")
+        plt.grid(True)
+        plt.legend()
+        plt.show()
+
 
 def main(args=None):
     rclpy.init(args=args)
     node = ManipControlNode()
-    rclpy.spin(node)
-    rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.plot_mse()
+        node.destroy_node()
+        rclpy.shutdown()

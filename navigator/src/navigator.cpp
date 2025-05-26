@@ -11,7 +11,7 @@ namespace navigator {
 
 Navigator::Navigator() : Node("navigator")
     , traj_loaded(false), nav_const_(1.0), tolerance_(1.0), 
-    theta_LOS_rate(0.0), previous_theta_LOS(0.0), delta_t(0.2), trajectory_point_count(0), count(0), lin_speed(0.1), ee_traj_level(0.325)
+    theta_LOS_rate(0.0), previous_theta_LOS(0.0), delta_t(0.2), trajectory_point_count(0), count(0), lin_speed(0.06), max_ang_vel_(1.0), ee_traj_level(0.325)
 {
     goal_.setZero();
 
@@ -24,6 +24,13 @@ Navigator::Navigator() : Node("navigator")
     std::string base_odom_topic = "/" + robot_name + "/odom";
     std::string move_ahead_topic = "/" + robot_name + "/move_ahead";
     std::string reached_waypoint_topic = "/" + robot_name + "/reached_waypoint";
+
+    // std::string trajectory_topic =  "/trajectory";
+    // std::string ee_trajectory_topic =   "/ee_trajectory";
+    // std::string base_cmd_topic = "/cmd_vel";
+    // std::string base_odom_topic = "/odom";
+    // std::string move_ahead_topic = "/move_ahead";
+    // std::string reached_waypoint_topic =  "/reached_waypoint";
 
     trajectory_subscription_ = this->create_subscription<mm_interfaces::msg::TrajectoryDiff>(
     trajectory_topic, 1, std::bind(&Navigator::readTrajectoryCallback, this, std::placeholders::_1));
@@ -158,12 +165,17 @@ void Navigator::timerCallback() {
     double theta_LOS;
 
     theta_LOS = atan2(goal_position.getY() - robot_position.getY(), goal_position.getX() - robot_position.getX());
-    theta_LOS_rate = (theta_LOS - previous_theta_LOS) / delta_t;
+    double delta_theta = angles::shortest_angular_distance(previous_theta_LOS, theta_LOS);
+    theta_LOS_rate = delta_theta / delta_t;
+
+    // theta_LOS_rate = (theta_LOS - previous_theta_LOS) / delta_t;
+
     previous_theta_LOS = theta_LOS;
 
     double ang_vel(0.0);
 
     ang_vel = nav_const_* theta_LOS_rate;
+    ang_vel = std::clamp(ang_vel, -max_ang_vel_, max_ang_vel_);
 
     cmd_vel_.linear.x = lin_speed;
     cmd_vel_.angular.z = ang_vel;
