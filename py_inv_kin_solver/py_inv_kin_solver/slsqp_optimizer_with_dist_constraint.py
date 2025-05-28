@@ -66,19 +66,35 @@ def solve_ik_with_constraint(x_des, y_des, z_des, q_prev, fixed_pos_world, d_fix
     upper = q_max
     bounds = [(lo, hi) for lo, hi in zip(lower, upper)]
 
-    # Define constraint in scipy format
-    constraints = [
-        {'type': 'eq', 'fun': joint_sum_constraint},
-        {'type': 'eq', 'fun': lambda q: distance_constraint(q, fixed_pos_world, d_fixed, base_pos, base_height)},
-        # {'type': 'ineq', 'fun': lambda q: 0.01 - abs(distance_constraint(q, fixed_pos_world, d_fixed, base_pos, base_height))}
+    # # Define constraint in scipy format
+    # constraints = [
+    #     {'type': 'eq', 'fun': joint_sum_constraint},
+    #     # {'type': 'eq', 'fun': lambda q: distance_constraint(q, fixed_pos_world, d_fixed, base_pos, base_height)},
+    #     {'type': 'ineq', 'fun': lambda q: 0.01 - abs(distance_constraint(q, fixed_pos_world, d_fixed, base_pos, base_height))}
 
-        ]
+    #     ]
+
+    # === Relaxed joint sum constraint: |q2 + q3 + q4| <= ε
+    joint_sum_eps = 0.05
+    def joint_sum_ineq_upper(q): return  joint_sum_eps - (q[1] + q[2] + q[3])
+    def joint_sum_ineq_lower(q): return  joint_sum_eps + (q[1] + q[2] + q[3])
+
+    # === Relaxed distance constraint: |distance - d_fixed| <= ε
+    distance_eps = 0.01  # 1cm tolerance
+    def distance_upper(q): return distance_eps - abs(distance_constraint(q, fixed_pos_world, d_fixed, base_pos, base_height))
+
+    constraints = [
+        {'type': 'ineq', 'fun': joint_sum_ineq_upper},
+        {'type': 'ineq', 'fun': joint_sum_ineq_lower},
+        {'type': 'ineq', 'fun': distance_upper}
+    ]
 
     result = minimize(cost_function, q_prev,
                       args=(target_pos_world, base_pos, base_height),
                       method='SLSQP',
                       bounds=bounds,
-                      constraints=constraints)
+                      constraints=constraints,
+                      options={'ftol': 1e-6, 'maxiter': 100, 'disp': True})
      
     if result.success:
         q_sol = result.x.copy()

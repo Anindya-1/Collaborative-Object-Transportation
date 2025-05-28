@@ -80,13 +80,6 @@ class ManipControlNode(Node):
             y_ee = projected_traj_pos[1] - projected_base_pos[1]
             z_ee = projected_traj_pos[2] - self.base_height
 
-            # Current EE world position = base pos + EE offset (undoing base height subtraction)
-            current_ee_world_pos = np.array([
-                x_ee + projected_base_pos[0],
-                y_ee + projected_base_pos[1],
-                z_ee + 0.1
-            ])
-
             # self.get_logger().info(f"Solving IK for EE position: [{x_ee:.3f}, {y_ee:.3f}, {z_ee:.3f}]")
             self.get_logger().info(f"Solving IK for EE position: [{projected_traj_pos[0]:.3f}, {projected_traj_pos[1]:.3f}, {projected_traj_pos[2]:.3f}]")
 

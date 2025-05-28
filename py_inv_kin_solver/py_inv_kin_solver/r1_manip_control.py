@@ -170,6 +170,7 @@ class R1ManipControlNode(Node):
         msg.y = y_world
         msg.z = z_world
         self.ee_pos_pub.publish(msg)
+        self.get_logger().info(f"Estimated EE position in world frame: [{x_world:.3f}, {y_world:.3f}, {z_world:.3f}]")
 
 
 def main(args=None):
