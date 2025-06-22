@@ -1,0 +1,11 @@
+This Document is a step-by-step guide to activate turtlebot3_manipulation system created by turtlebot3 burger hardware(motors replaced with Dynamixel XM430-W350-T/R) and openManipulator-X
+
+Firstly, flash Ubuntu Server 22.04 LTS(64-bit) on raspberry pi sd card using Raspberry Pi Imager.
+
+using ssh, get access to ubuntu and install the following on it.
+example ssh command: ssh minion1@192.20.10.2
+
+1. ros2 humble: Steps are given at this url: https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html 
+2. colcon: Steps are given at this url: https://colcon.readthedocs.io/en/released/user/installation.html
+
+Next, install Arduino IDE 1.8.19 in your local system.
