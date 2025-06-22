@@ -8,4 +8,21 @@ example ssh command: ssh minion1@192.20.10.2
 1. ros2 humble: Steps are given at this url: https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html 
 2. colcon: Steps are given at this url: https://colcon.readthedocs.io/en/released/user/installation.html
 
+run following commands on turtlebot3 ubuntu(refer: https://emanual.robotis.com/docs/en/platform/turtlebot3/manipulation/#manipulation)
+
+    sudo apt install ros-humble-hardware-interface ros-humble-xacro ros-humble-ros2-control ros-humble-ros2-controllers ros-humble-gripper-controllers
+    cd ~/turtlebot3_ws/src/
+    git clone -b humble https://github.com/ROBOTIS-GIT/turtlebot3_manipulation.git
+    cd ~/turtlebot3_ws && colcon build --symlink-install
+
+
+
+Check if your dynamixel motors are correctly configured, use Dynamixel wizard 2.0 
+first, connect OpenCR 1.0 board with your local system. Then, connect one motor at a time to OpenCR board for firmware recovery. Go to firmware recovery option in main menu and follow the given steps. To check which port of your local system is connected with OpenCR board, use the following command
+    sudo dmesg | grep tty
+Once, firmware recovery is completed for both the motors, scan the dynamixels and you can now configure them as per your needs.
+For our use, change the ID of motors to 1(left motor) and 2(right motor) and set return delay time to 0 microseconds 
+
+
+
 Next, install Arduino IDE 1.8.19 in your local system.
