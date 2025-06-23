@@ -11,7 +11,7 @@ example ssh command: ssh minion1@192.20.10.2
 run following commands on turtlebot3 ubuntu(refer: https://emanual.robotis.com/docs/en/platform/turtlebot3/manipulation/#manipulation)
 
     sudo apt install ros-humble-hardware-interface ros-humble-xacro ros-humble-ros2-control ros-humble-ros2-controllers ros-humble-gripper-controllers
-    cd ~/turtlebot3_ws/src/
+    mkdir -p ~/turtlebot3_ws/src && cd ~/turtlebot3_ws/src
     git clone -b humble https://github.com/ROBOTIS-GIT/turtlebot3_manipulation.git
     cd ~/turtlebot3_ws && colcon build --symlink-install
 
@@ -24,5 +24,29 @@ Once, firmware recovery is completed for both the motors, scan the dynamixels an
 For our use, change the ID of motors to 1(left motor) and 2(right motor) and set return delay time to 0 microseconds 
 
 
+next, only build tb3 waffle configuration(don't connect openManipulator-X to OPenCR yet). install and build following ros2 packages
+
+    sudo apt install python3-argcomplete python3-colcon-common-extensions libboost-system-dev build-essential
+    sudo apt install ros-humble-hls-lfcd-lds-driver
+    sudo apt install ros-humble-turtlebot3-msgs
+    sudo apt install ros-humble-dynamixel-sdk
+    sudo apt install libudev-dev
+    cd ~/turtlebot3_ws/src
+    git clone -b humble https://github.com/ROBOTIS-GIT/turtlebot3.git
+    git clone -b humble https://github.com/ROBOTIS-GIT/ld08_driver.git
+    cd ~/turtlebot3_ws/src/turtlebot3
+    rm -r turtlebot3_cartographer turtlebot3_navigation2
+    cd ~/turtlebot3_ws/
+    echo 'source /opt/ros/humble/setup.bash' >> ~/.bashrc
+    source ~/.bashrc
+    colcon build --symlink-install --parallel-workers 1
+    echo 'source ~/turtlebot3_ws/install/setup.bash' >> ~/.bashrc
+    source ~/.bashrc
+
+next, write following commands for USB port setting for OpenCR board
+
+    sudo cp `ros2 pkg prefix turtlebot3_bringup`/share/turtlebot3_bringup/script/99-turtlebot3-cdc.rules /etc/udev/rules.d/
+    sudo udevadm control --reload-rules
+    sudo udevadm trigger
 
 Next, install Arduino IDE 1.8.19 in your local system.
